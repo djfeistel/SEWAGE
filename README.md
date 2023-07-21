@@ -6,6 +6,9 @@
 are tqdm<sup>1</sup> and ART<sup>2</sup>. However, in the future ART will 
 be replaced with an our own algorithm for simulating reads.
 
+For detailed information about the tool:
+```SEWAGE --details```
+
 ### Installing dependencies via conda
 Note: It is not necessary to use conda as long as you have **tqdm** and **art_illuina** in your $PATH
 ```
