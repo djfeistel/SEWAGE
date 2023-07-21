@@ -94,9 +94,9 @@ Tool Description:
 Minimal usage: ./SEWAGE -i <input>
 ```
 ### Output
-| Name | Type | Description |
+|Name |Type |Description |
 |:----:|:----:|:-----------:|
-|proportions_list.txt|text file|Two column file with col=pathway/to/file.fasta and col2=proporiton (float)|
+|proportions_list.txt|text file|Two column file with col1=pathway/to/file.fasta and col2=proporiton (float)|
 |<input_name>_1.fastq|fastq file|Forward reads|
 |<input_name>_2.fastq|fastq file|Reverse reads|
 |<input_name>_logfile.log|text file|Information about the run|
