@@ -29,7 +29,9 @@ def artIlluminaSubprocess(fastaFile:str,
                           maxIndel:int=0,
                           nf:int=0,
                           qL:int=28,
-                          qU:int=40):
+                          qU:int=40,
+                          qs:int=0,
+                          qs2:int=0):
     '''simulate reads'''
     file_name = os.path.basename(fastaFile) #removed pathway for as fasta file only
     id = file_name[:file_name.rfind('.')] # remove extention to add to reads defline
@@ -55,7 +57,9 @@ def artIlluminaSubprocess(fastaFile:str,
         "-na",
         "-nf", str(nf),
         "-qL", str(qL),
-        "-qU", str(qU)
+        "-qU", str(qU),
+        "-qs", str(qs),
+        "-qs2", str(qs2)
     ]
 
     stderr_file = f"{id}_log.txt"

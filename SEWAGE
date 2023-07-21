@@ -134,7 +134,9 @@ def main():
                               maxIndel=args.maxIndel,
                               nf=args.nf,
                               qL=args.qL,
-                              qU=args.qU) 
+                              qU=args.qU,
+                              qs=args.qs,
+                              qs2=args.qs2) 
     
     '''concatinate fastq files into one file with basename of parent_dir as name'''
     concatenateFastQfiles(parent_dir=parent_dir, 

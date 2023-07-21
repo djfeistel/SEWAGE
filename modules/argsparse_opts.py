@@ -182,6 +182,20 @@ def opts():
         type=int,
         dest='qU'
     )
+    art_parameters.add_argument(
+        "-qs", "--qShift", 
+        help="From 'art_illumina': the amount to shift every first-read quality score by", 
+        metavar='INT',
+        type=int,
+        dest='qs'
+    )
+    art_parameters.add_argument(
+        "-qs2", "--qShift2", 
+        help="From 'art_illumina': the amount to shift every second-read quality score by", 
+        metavar='INT',
+        type=int,
+        dest='qs2'
+    )
     tool_description = parser.add_argument_group("Tool Description", "Detailed information about the tool")
     tool_description.add_argument(
         "--details", 
