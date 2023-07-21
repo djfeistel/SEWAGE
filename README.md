@@ -8,7 +8,7 @@ be replaced with an our own algorithm for simulating reads.
 For detailed information about the tool: ```SEWAGE --details```
 
 ## Installing dependencies via conda
-Note: It is not necessary to use conda as long as you have **tqdm** and **NumPY** installed for Python 3 and **art_illuina** in your $PATH
+Note: It is not necessary to use conda as long as you have ***tqdm*** and ***NumPY*** installed for Python 3 and ***art_illuina*** in your $PATH
 ```
 conda create -n SEWAGE_env python==3.8.3 --yes
 conda activate SEWAGE_env
