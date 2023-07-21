@@ -141,8 +141,6 @@ def main():
     print(f"\nFinished creating 'Sewage' samples :)\n", file=sys.stderr)
     logging.info(f"Finished creating 'Sewage' samples :)")
 
-    return 
-
 
 if __name__ == "__main__":
     main()
