@@ -18,7 +18,10 @@ conda install -c bioconda art --yes
 ```
 
 ## Usage
-For detailed information about paramters:  ```SEWAGE -h```
+For detailed information about paramters:  
+```SEWAGE -h```
+
+
 ### Citations
 
 1. https://github.com/tqdm/tqdm
