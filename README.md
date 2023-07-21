@@ -32,7 +32,7 @@ Help Menu:
 ```
 usage: SEWAGE.py [-h] [-i PATHWAY or FILE] [-o STR] [-O DIR] [-p {r,e}] [-rs INT] [-pf INT]
                  [-ss {HS10,HS20,HS25,HSXn,HSXt,MinS,MSv1,MSv3,NS50,GA1,GA2}] [-l INT] [-m INT] [-s INT] [-ir INT] [-ir2 INT] [-dr INT]
-                 [-dr2 INT] [-rsA INT] [-k INT] [-nf INT] [-qL INT] [-qU INT] [--details]
+                 [-dr2 INT] [-rsA INT] [-k INT] [-nf INT] [-qL INT] [-qU INT] [-qs INT] [-qs2 INT] [--details]
 
 Simulation of Environmental Wastewater sequence data for the Analysis of Genomics and Epidemiology
 
@@ -87,6 +87,10 @@ ART parameters:
                         regions [default=0]
   -qL INT, --minQ INT   From 'art_illumina': the minimum base quality score [default=28]
   -qU INT, --maxQ INT   From 'art_illumina': the maximum base quality score [default=40]
+  -qs INT, --qShift INT
+                        From 'art_illumina': the amount to shift every first-read quality score by
+  -qs2 INT, --qShift2 INT
+                        From 'art_illumina': the amount to shift every second-read quality score by
 
 Tool Description:
   Detailed information about the tool
