@@ -3,7 +3,7 @@
 ## Synthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations
 
 ***SEWAGE*** is entirely written in Python 3 and is tested on Python 3.8.3. As of now, the only dependencies 
-are tqdm (https://github.com/tqdm/tqdm) and ART (1). However, in the future ART will 
+are tqdm^1^ and ART^2^. However, in the future ART will 
 be replaced with an our own algorithm for simulating reads.
 
 ### Installing dependencies via conda
@@ -17,4 +17,5 @@ conda install -c bioconda art --yes
 ```
 ### Citations
 
-1. Huang, Weichun, et al. "ART: a next-generation sequencing read simulator." Bioinformatics 28.4 (2012): 593-594.
+1. https://github.com/tqdm/tqdm
+2. Huang, W., Li, L., Myers, J. R., & Marth, G. T. (2012). ART: a next-generation sequencing read simulator. Bioinformatics, 28(4), 593-594.
