@@ -14,8 +14,12 @@ conda create -n SEWAGE_env python==3.8.3 --yes
 conda activate SEWAGE_env
 pip install tqdm numpy==1.21.0
 conda install -c bioconda art --yes
-
 ```
+Once you have installed the conda environment (if using) you can add SEWAGE as a symlink to your bin  
+```
+ln -s <pathway/to/SEWAGE> <pathway/to/bin>
+```
+
 
 ## Usage
 For detailed information about paramters:  
