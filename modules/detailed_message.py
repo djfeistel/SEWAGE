@@ -38,5 +38,6 @@ def details():
 
     SEWAGE -h for help menu
     
+    https://github.com/djfeistel/SEWAGE
     '''
     return print(message)
