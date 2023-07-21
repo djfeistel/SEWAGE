@@ -21,6 +21,10 @@ conda install -c bioconda art --yes
 For detailed information about paramters:  
 ```SEWAGE -h```
 
+Minimal Usage:  
+```SEWAGE -i <input>```
+
+
 
 ### Citations
 
