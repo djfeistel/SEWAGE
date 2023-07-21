@@ -34,7 +34,7 @@ usage: SEWAGE.py [-h] [-i PATHWAY or FILE] [-o STR] [-O DIR] [-p {r,e}] [-rs INT
                  [-ss {HS10,HS20,HS25,HSXn,HSXt,MinS,MSv1,MSv3,NS50,GA1,GA2}] [-l INT] [-m INT] [-s INT] [-ir INT] [-ir2 INT] [-dr INT]
                  [-dr2 INT] [-rsA INT] [-k INT] [-nf INT] [--details]
 
-Simulation of Environmental Wastewater sequence data for the Analysis of Genomics and Epidemiology
+Synthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations
 
 optional arguments:
   -h, --help            show this help message and exit
