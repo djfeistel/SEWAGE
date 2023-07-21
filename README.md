@@ -16,6 +16,9 @@ pip install pip install tqdm
 conda install -c bioconda art --yes
 conda install -c bioconda art --yes
 ```
+
+## Usage
+For detailed information about paramters:  ```SEWAGE -h```
 ### Citations
 
 1. https://github.com/tqdm/tqdm
