@@ -166,6 +166,22 @@ def opts():
         type=int,
         dest='nf'
     )
+    art_parameters.add_argument(
+        "-qL", "--minQ", 
+        help="From 'art_illumina': the minimum base quality score [default=28]", 
+        metavar='INT',
+        default=28,
+        type=int,
+        dest='qL'
+    )
+    art_parameters.add_argument(
+        "-qU", "--maxQ", 
+        help="From 'art_illumina': the maximum base quality score [default=40]", 
+        metavar='INT',
+        default=40,
+        type=int,
+        dest='qU'
+    )
     tool_description = parser.add_argument_group("Tool Description", "Detailed information about the tool")
     tool_description.add_argument(
         "--details", 
