@@ -22,22 +22,19 @@ ln -s <pathway/to/SEWAGE> <pathway/to/bin>
 
 
 ## Usage
-For detailed information about paramters:  
-```SEWAGE -h```
-
 Minimal Usage:  
 ```SEWAGE -i <input>```
 
-<<<<<<< HEAD
-### Output
-=======
+For detailed information about paramters:  
+```SEWAGE -h```
+
 Help Menu:
 ```
 usage: SEWAGE.py [-h] [-i PATHWAY or FILE] [-o STR] [-O DIR] [-p {r,e}] [-rs INT] [-pf INT]
                  [-ss {HS10,HS20,HS25,HSXn,HSXt,MinS,MSv1,MSv3,NS50,GA1,GA2}] [-l INT] [-m INT] [-s INT] [-ir INT] [-ir2 INT] [-dr INT]
-                 [-dr2 INT] [-rsA INT] [-k INT] [-nf INT] [--details]
+                 [-dr2 INT] [-rsA INT] [-k INT] [-nf INT] [-qL INT] [-qU INT] [--details]
 
-Synthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations
+Simulation of Environmental Wastewater sequence data for the Analysis of Genomics and Epidemiology
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -54,7 +51,6 @@ Input and Output Parameters:
                         Pathway to where output directory is stored [default='.']
 
 Proportion options [default is -p r -rs 13]:
->>>>>>> 785946c779b589ff593578f6a3646f8ee44865e4
 
   -p {r,e}, --proportion {r,e}
                         Generate random (r) or equal (e) proportions of reads
@@ -89,6 +85,8 @@ ART parameters:
                         From 'art_illumina': the maximum total number of insertion and deletion per read [default=0]
   -nf INT, --maskN INT  From 'art_illumina': the cutoff frequency of 'N' in a window size of the read length for masking genomic
                         regions [default=0]
+  -qL INT, --minQ INT   From 'art_illumina': the minimum base quality score [default=28]
+  -qU INT, --maxQ INT   From 'art_illumina': the maximum base quality score [default=40]
 
 Tool Description:
   Detailed information about the tool
@@ -97,6 +95,11 @@ Tool Description:
 
 Minimal usage: ./SEWAGE -i <input>
 ```
+
+
+
+
+
 ### Output
 |Name |Type |Description |
 |:----:|:----:|:-----------:|
