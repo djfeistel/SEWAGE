@@ -9,7 +9,9 @@ import shutil
 import subprocess
 import numpy as np
 import time
+import logging
 from tqdm import tqdm
+
 function_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "modules")
 sys.path.append(function_dir)
 from log_functions import logFile, logFile_initials
@@ -114,6 +116,7 @@ def main():
         fasta_file, fasta_proportion = item
         logging.info(f"Simulation reads for {fasta_file}")
         logging.info(f"Proporiton is set at {fasta_proportion}")
+
         artIlluminaSubprocess(fastaFile=fasta_file,
                               log_dir=logs_dir,
                               proportion=fasta_proportion,
@@ -128,7 +131,9 @@ def main():
                               dr2=args.dr2,
                               rndSeed=args.rndSeed_art_illumina,
                               maxIndel=args.maxIndel,
-                              nf=args.nf) 
+                              nf=args.nf,
+                              qL=args.qL,
+                              qU=args.qU) 
     
     '''concatinate fastq files into one file with basename of parent_dir as name'''
     concatenateFastQfiles(parent_dir=parent_dir, 

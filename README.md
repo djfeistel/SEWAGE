@@ -28,6 +28,7 @@ For detailed information about paramters:
 Minimal Usage:  
 ```SEWAGE -i <input>```
 
+### Output
 
 
 ### Citations

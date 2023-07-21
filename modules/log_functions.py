@@ -1,4 +1,5 @@
 import logging
+import os
 
 def logFile(parent_dir):
     dir_name = os.path.basename(parent_dir)
