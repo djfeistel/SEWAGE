@@ -3,7 +3,7 @@
 ## Synthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations
 
 ***SEWAGE*** is entirely written in Python 3 and is tested on Python 3.8.3. As of now, the only dependencies 
-are tqdm^1^ and ART^2^. However, in the future ART will 
+are tqdm<sup>1</sup> and ART<sup>2</sup>. However, in the future ART will 
 be replaced with an our own algorithm for simulating reads.
 
 ### Installing dependencies via conda
