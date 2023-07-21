@@ -1,3 +1,3 @@
 # SEWAGE
 
-## Simulation of Environmental Wastewater for the Analysis of Genomics and Epidemiology
+## Synthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations
