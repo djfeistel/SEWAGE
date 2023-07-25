@@ -1,13 +1,59 @@
+#!/usr/bin/env python3
+
 import argparse
 
-def sequence_opts():
-    parser = argparse.ArgumentParser(
-        prog="SEWAGE",
-        description=f"\nSynthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations\n",
-        epilog=f"Minimal usage: ./SEWAGE -i <input>"
-    )
-    '''input and output'''
-    required_pathway = parser.add_argument_group("Input and Output Parameters", "-i/--in is required")
+def details():
+    message = '''print details here'''
+    return print(message)
+
+def main_sewage_menu():
+    # Create the main parser
+    parser = argparse.ArgumentParser(prog="SEWAGE",
+                                     description=f"Synthetically Enriched Wastewater-like sequence data for Assessing Genomic variants in Environmental populations\n",
+                                     epilog="")
+
+    # Create subparsers
+    subparsers = parser.add_subparsers(title='SEWAGE Options', 
+                                       dest='subcommand', 
+                                       description='', 
+                                       required=True,
+                                       metavar='SEWAGE [amplicon, enrich, details]')
+
+    # Subparser for "amplicon" subcommand
+    amplicon_parser = subparsers.add_parser('amplicon', help='Generate amplicons')
+    amplicon_parser.add_argument('-f', '--fasta', 
+                                 help='Single or multi-fasta reference. Multi-fasta files should be unique genomes for each defline/sequence. \
+                                    Output will produce "${defline}_amplicon.fasta" files for each genome', 
+                                 required=True,
+                                 type=str,
+                                 dest='fasta')
+    amplicon_parser.add_argument('-s', '--scheme', 
+                                 help='Primer scheme: (Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"], \
+                                    VarSkip = ["vsl1a", "vss1a", "vss2a", "vss2b"])', 
+                                 required=True, 
+                                 type=str,
+                                 choices=["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vsl1a", "vss1a", "vss2a", "vss2b"],
+                                 metavar='SCHEME',
+                                 dest='scheme')
+    amplicon_parser.add_argument('-o', '--output', 
+                                 help='Output directory name for storgage [default="SEWAGE_amplicons"]', 
+                                 required=False, 
+                                 type=str,
+                                 metavar='STR',
+                                 dest='output')
+    amplicon_parser.add_argument('-p', '--pathway', 
+                                 help='Pathway to storgage directory [default="."]',
+                                 required=False, 
+                                 type=str,
+                                 metavar='PATHWAY',
+                                 dest='pathway',
+                                 default='.')
+    ## amplicon_parser.set_defaults(func=amplicon_function)
+
+    # Subparser for "sequence" subcommand
+    enrich_parser = subparsers.add_parser('enrich', help='Generate enrichment sequence data')
+
+    required_pathway = enrich_parser.add_argument_group("Input and Output Parameters", "-i/--in is required")
     required_pathway.add_argument(
         "-i", "--in", 
         help="Pathway to directory with FASTA files or a text file with a list of pathways to FASTA files. \
@@ -38,7 +84,7 @@ def sequence_opts():
     )
 
     # Create a group for the "Propirtions" section
-    proportions_options = parser.add_argument_group("Proportion options [default is -p r -rs 13]", "")
+    proportions_options = enrich_parser.add_argument_group("Proportion options [default is -p r -rs 13]", "")
     proportions_options.add_argument(
         "-p", "--proportion", 
         help="Generate random (r) or equal (e) proportions of reads", 
@@ -57,7 +103,7 @@ def sequence_opts():
         dest='rndSeed'
     )
     '''art_illumina paramters''' 
-    art_parameters = parser.add_argument_group(
+    art_parameters = enrich_parser.add_argument_group(
         "ART parameters", 'Default parameters listed below are for \
         simulating "perfect" reads at 150bp and can be modified as needed. \
         All other parameters not listed here are in default setting or not used as defined by "art_illumia" \
@@ -196,14 +242,13 @@ def sequence_opts():
         type=int,
         dest='qs2'
     )
-    tool_description = parser.add_argument_group("Tool Description", "Detailed information about the tool")
-    tool_description.add_argument(
-        "--details", 
-        help="", 
-        required=False,
-        dest="details",
-        action='store_true'
-    )
 
+    details_parser = subparsers.add_parser('details', help='Print a message')
+    #details_parser.set_defaults(func=details_function)
+    # Parse the arguments
     args = parser.parse_args()
+
     return args
+
+if __name__ == "__main__":
+    args = main_sewage_menu()

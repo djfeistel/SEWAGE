@@ -93,12 +93,6 @@ ART parameters:
                         From 'art_illumina': the amount to shift every second-read quality score by
 
 Tool Description:
-  Detailed information about the tool
-
-  --details
-
-Minimal usage: ./SEWAGE -i <input>
-```
 
 
 

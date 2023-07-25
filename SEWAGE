@@ -16,7 +16,7 @@ from tqdm import tqdm
 function_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "modules")
 sys.path.append(function_dir)
 from log_functions import logFile, logFile_initials
-from argsparse_opts import opts
+from argsparse_opts import sequence_opts
 from detailed_message import details
 from fasta_funcitons import globFastAfiles, listOfFastaPathways
 from proportion_functions import equalProportions, randomProportions
@@ -25,7 +25,7 @@ from write_functions import countdown, writeProportionFile, parentDir_pathway, c
 
 def main():
 
-    args = opts()
+    args = sequence_opts()
 
     '''print full descriptive message'''
     if args.details or len(sys.argv) == 1:
