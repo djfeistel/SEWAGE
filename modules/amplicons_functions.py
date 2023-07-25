@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
-
-import sys
+import os
+from pathlib import Path
 
 def read_referecne_fasta(file_path):
     '''open single reference fasta file and return single string sequence
@@ -30,10 +29,13 @@ def read_referecne_fasta(file_path):
 
     return sequences
 
-def read_primer_file(primer_file_raw: str) -> dict:
+def read_primer_file(scheme: str) -> dict:
     '''open custom primer file and return dict'''
+    SEWAGE_dir = Path(__file__).parent.parent
+    print(SEWAGE_dir)
+    scheme_pathway = os.path.join(os.path.join(SEWAGE_dir, "scheme"), scheme+".tsv")
     primer_dict = {}
-    with open(primer_file_raw, 'r') as fh:
+    with open(scheme_pathway, 'r') as fh:
         for line in fh:
             if line.startswith("#"): continue
             line = line.strip().split('\t')
@@ -82,9 +84,10 @@ def write_amplicions(amplicon_dict: dict, output) -> None:
     return
 
 
-def generate_amplicons(referecne_fasta_raw: str, 
-              primer_file_raw: str,
-              platform: str):
+def generate_amplicons(
+        referecne_fasta_raw: str, 
+        scheme: str
+    ):
     '''
     iterate through a dictionary with seq_name as key and sequence as values
     then find forward, reverse primers in sequence
@@ -92,16 +95,16 @@ def generate_amplicons(referecne_fasta_raw: str,
     '''
     amplicon_dict = {}
     ref_seq_dict = read_referecne_fasta(referecne_fasta_raw)
-    primer_dict = read_primer_file(primer_file_raw)
+    primer_dict = read_primer_file(scheme)
 
     for ref_name, ref_sequence in ref_seq_dict.items():
         
         for primer_name, primer_seqs in primer_dict.items():
 
-            if any(True for x in ["ARTIC", "VARSKIP-s"] if x in platform):
+            if any(True for x in ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vss1a", "vss2a", "vss2b"] if x in platform):
                 forward_primer = primer_seqs[0]
                 reverse_primer = reverse_complimentary_sequence(sequence=primer_seqs[1])
-            elif "vsl1a" in platform:
+            elif "vsl1a" in scheme:
                 forward_primer = primer_seqs[0]
                 reverse_primer = primer_seqs[1]
 
@@ -112,20 +115,20 @@ def generate_amplicons(referecne_fasta_raw: str,
             )
 
             if not index_amplicon_list:
-                defline = "__".join([primer_name, platform, ref_name])
+                defline = "__".join([primer_name, scheme, ref_name])
                 amplicon_dict[defline] = None
             else:
                 amplicion_seq = str(ref_sequence[index_amplicon_list[0]:index_amplicon_list[1]])
                 amplicon_length = str(len(amplicion_seq)) + "bp"
-                defline = "__".join([primer_name, platform, ref_name, amplicon_length])
+                defline = "__".join([primer_name, scheme, ref_name, amplicon_length])
                 amplicon_dict[defline] = amplicion_seq
     
     write_amplicions(amplicon_dict=amplicon_dict, output="TEMP")
 
     return
     
-if __name__ == "__main__":
-    generate_amplicons(sys.argv[1], sys.argv[2], sys.argv[3])
+# if __name__ == "__main__":
+#     generate_amplicons(sys.argv[1], sys.argv[2], sys.argv[3])
 '''
 still need to connect this script to the amplicon subcommand using argsparse
 still need to add in all the available primers lists

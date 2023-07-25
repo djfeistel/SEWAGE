@@ -1,26 +1,23 @@
-#!/usr/bin/env python3
-
 import argparse
-
-def details():
-    message = '''print details here'''
-    return print(message)
+from enrichment_workflow import EnrichmentWorkflow
+from amplicons_functions import generate_amplicons
+from detailed_message import details
 
 def main_sewage_menu():
     # Create the main parser
     parser = argparse.ArgumentParser(prog="SEWAGE",
-                                     description=f"Synthetically Enriched Wastewater-like sequence data for Assessing Genomic variants in Environmental populations\n",
+                                     description=f"SEWAGE NEEDS A NAME\n",
                                      epilog="")
 
     # Create subparsers
-    subparsers = parser.add_subparsers(title='SEWAGE Options', 
+    subparsers = parser.add_subparsers(title='Options', 
                                        dest='subcommand', 
                                        description='', 
                                        required=True,
                                        metavar='SEWAGE [amplicon, enrich, details]')
 
     # Subparser for "amplicon" subcommand
-    amplicon_parser = subparsers.add_parser('amplicon', help='Generate amplicons')
+    amplicon_parser = subparsers.add_parser('amplicon', help='Generate amplicons from a scheme')
     amplicon_parser.add_argument('-f', '--fasta', 
                                  help='Single or multi-fasta reference. Multi-fasta files should be unique genomes for each defline/sequence. \
                                     Output will produce "${defline}_amplicon.fasta" files for each genome', 
@@ -48,10 +45,10 @@ def main_sewage_menu():
                                  metavar='PATHWAY',
                                  dest='pathway',
                                  default='.')
-    ## amplicon_parser.set_defaults(func=amplicon_function)
+    amplicon_parser.set_defaults(func=generate_amplicons)
 
     # Subparser for "sequence" subcommand
-    enrich_parser = subparsers.add_parser('enrich', help='Generate enrichment sequence data')
+    enrich_parser = subparsers.add_parser('enrich', help='Generate sequence data from amplicons')
 
     required_pathway = enrich_parser.add_argument_group("Input and Output Parameters", "-i/--in is required")
     required_pathway.add_argument(
@@ -82,7 +79,6 @@ def main_sewage_menu():
         type=str,
         default='.'
     )
-
     # Create a group for the "Propirtions" section
     proportions_options = enrich_parser.add_argument_group("Proportion options [default is -p r -rs 13]", "")
     proportions_options.add_argument(
@@ -96,7 +92,7 @@ def main_sewage_menu():
     )    
     proportions_options.add_argument(
         "-rs", "--rndSeed", 
-        help="Random seed for generateing proportions [default=13]", 
+        help="Random seed used for generating random (-p r) proportions [default=13]", 
         metavar='INT',
         default=13,
         type=int,
@@ -106,9 +102,9 @@ def main_sewage_menu():
     art_parameters = enrich_parser.add_argument_group(
         "ART parameters", 'Default parameters listed below are for \
         simulating "perfect" reads at 150bp and can be modified as needed. \
-        All other parameters not listed here are in default setting or not used as defined by "art_illumia" \
-        and cannot be access via SEWAGE. Please be familiar with how "art_illumina" \
-        functins before modifying these parameters')
+        All other parameters not listed below are either not in use or in default \
+        setting as defined by "art_illumia" and cannot be access via SEWAGE. \
+        Please be familiar with how "art_illumina" functins before modifying these parameters')
     art_parameters.add_argument(
         "-pf", "--pfold", 
         help="Value to be mutiplied by proportion for use with '--fcov' from 'art_illumina' [default=1000]\
@@ -242,13 +238,12 @@ def main_sewage_menu():
         type=int,
         dest='qs2'
     )
+    # details about tool
+    enrich_parser.set_defaults(func=EnrichmentWorkflow)
 
     details_parser = subparsers.add_parser('details', help='Print a message')
-    #details_parser.set_defaults(func=details_function)
-    # Parse the arguments
+    details_parser.set_defaults(func=details)
+    
     args = parser.parse_args()
 
     return args
-
-if __name__ == "__main__":
-    args = main_sewage_menu()
