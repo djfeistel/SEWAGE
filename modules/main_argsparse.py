@@ -17,7 +17,8 @@ def main_sewage_menu():
                                        metavar='SEWAGE [amplicon, enrich, details]')
 
     # Subparser for "amplicon" subcommand
-    amplicon_parser = subparsers.add_parser('amplicon', help='Generate amplicons from a scheme')
+    amplicon_parser = subparsers.add_parser('amplicon', help='Generate amplicons from a primer scheme')
+
     amplicon_parser.add_argument('-f', '--fasta', 
                                  help='Single or multi-fasta reference. Multi-fasta files should be unique genomes for each defline/sequence. \
                                     Output will produce "${defline}_amplicon.fasta" files for each genome', 
@@ -33,8 +34,9 @@ def main_sewage_menu():
                                  metavar='SCHEME',
                                  dest='scheme')
     amplicon_parser.add_argument('-o', '--output', 
-                                 help='Output directory name for storgage [default="SEWAGE_amplicons"]', 
-                                 required=False, 
+                                 help='Output Prefix name for fasta file [default="SEWAGE_amplicons.fasta"]', 
+                                 required=False,
+                                 default="SEWAGE_amplicons",
                                  type=str,
                                  metavar='STR',
                                  dest='output')
@@ -49,7 +51,6 @@ def main_sewage_menu():
 
     # Subparser for "sequence" subcommand
     enrich_parser = subparsers.add_parser('enrich', help='Generate sequence data from amplicons')
-
     required_pathway = enrich_parser.add_argument_group("Input and Output Parameters", "-i/--in is required")
     required_pathway.add_argument(
         "-i", "--in", 

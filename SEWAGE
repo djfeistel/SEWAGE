@@ -13,6 +13,7 @@ import time
 import logging
 from tqdm import tqdm
 
+sewage_dir = os.path.dirname(os.path.realpath(__file__))
 modules_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "modules")
 sys.path.append(modules_dir)
 # internal functions
@@ -26,41 +27,43 @@ from proportion_functions import equalProportions, randomProportions
 from art_functions import check_art_illumina_command, artIlluminaSubprocess
 from write_functions import countdown, writeProportionFile, parentDir_pathway, concatenateFastQfiles
 
-
 def main():
 
     args = main_sewage_menu()
 
     if args.subcommand == "amplicon":
         generate_amplicons(referecne_fasta_raw=args.fasta,
-                           scheme=args.scheme)
-    elif args.subcommand == "enrich":
-        print(args)
+                           scheme=args.scheme,
+                           sewage_dir=sewage_dir,
+                           output=args.output,
+                           output_pathway=args.pathway)
     elif args.subcommand == "details":
         details()
-        # EnrichmentWorkflow(
-        #     fasta_in: args.fasta_in,
-        #     dir_name: fasta,
-        #     out_pathway: str,
-        #     proportion: int,
-        #     rdmSd: int,
-        #     pfold: int,
-        #     ss: str,
-        #     l: int,
-        #     m: int,
-        #     s: int,
-        #     ir: int,
-        #     ir2: int,
-        #     dr: int,
-        #     dr2: int,
-        #     rdmSd_art: int,
-        #     maxIndel: int,
-        #     nf: int,
-        #     qL: int,
-        #     qU: int,
-        #     qs: int,
-        #     qs2: int,
-        # ):
+    elif args.subcommand == "enrich":
+        EnrichmentWorkflow(
+            args=args,
+            fasta_in=args.fasta,
+            dir_name=args.out,
+            out_pathway=args.out_pathway,
+            proportion=args.proportion,
+            rndSeed=args.rndSeed,
+            pfold= args.pfold,
+            ss=args.ss,
+            l=args.l,
+            m=args.m,
+            s=args.s,
+            ir=args.ir,
+            ir2=args.ir2,
+            dr=args.dr,
+            dr2=args.dr2,
+            rdmSd_art=args.rndSeed_art_illumina,
+            maxIndel=args.maxIndel,
+            nf=args.nf,
+            qL=args.qL,
+            qU=args.qU,
+            qs=args.qs,
+            qs2=args.qs2,
+        )
 
     # '''check if art_illumina is in pathway before starting any work'''
     # if not check_art_illumina_command()[0]:

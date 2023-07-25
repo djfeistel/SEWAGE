@@ -27,11 +27,12 @@ from write_functions import (
 
 
 def EnrichmentWorkflow(
+    args,
     fasta_in: str,
     dir_name: str,
     out_pathway: str,
     proportion: int,
-    rdmSd: int,
+    rndSeed: int,
     pfold: int,
     ss: str,
     l: int,
@@ -125,7 +126,7 @@ def EnrichmentWorkflow(
         fasta_proportions_list = equalProportions(fasta_pathway_list=fasta_pathway_list)
     else:
         fasta_proportions_list = randomProportions(
-            fasta_pathway_list=fasta_pathway_list, random_seed=rdmSd
+            fasta_pathway_list=fasta_pathway_list, random_seed=rndSeed
         )
 
     """change to rawreads directory to add reads there"""
