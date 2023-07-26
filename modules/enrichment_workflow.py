@@ -1,13 +1,13 @@
 import sys
 import os
-import glob
+#import glob
 import logging
-import random
-import string
-import shutil
-import subprocess
-import numpy as np
-import time
+# import random
+# import string
+# import shutil
+# import subprocess
+#import numpy as np
+#import time
 import logging
 from tqdm import tqdm
 
@@ -16,7 +16,7 @@ sys.path.append(modules_dir)
 # internal functions
 from log_functions import logFile, logFile_initials
 from fasta_funcitons import globFastAfiles, listOfFastaPathways
-from proportion_functions import equalProportions, randomProportions
+from proportion_functions import equalProportions, randomProportions, dominantVariantProportions
 from art_functions import check_art_illumina_command, artIlluminaSubprocess
 from write_functions import (
     countdown,
@@ -32,6 +32,7 @@ def EnrichmentWorkflow(
     dir_name: str,
     out_pathway: str,
     proportion: int,
+    dVOC: float,
     rndSeed: int,
     pfold: int,
     ss: str,
@@ -50,7 +51,6 @@ def EnrichmentWorkflow(
     qs: int,
     qs2: int,
 ):
-    
     
     #args = args
 
@@ -124,10 +124,13 @@ def EnrichmentWorkflow(
 
     if proportion == "e":
         fasta_proportions_list = equalProportions(fasta_pathway_list=fasta_pathway_list)
+    elif proportion == 'v':
+        fasta_proportions_list = dominantVariantProportions(fasta_pathway_list=fasta_pathway_list, 
+                                                            random_seed=rndSeed,
+                                                            dVOC=dVOC)
     else:
-        fasta_proportions_list = randomProportions(
-            fasta_pathway_list=fasta_pathway_list, random_seed=rndSeed
-        )
+        fasta_proportions_list = randomProportions(fasta_pathway_list=fasta_pathway_list, 
+                                                   random_seed=rndSeed)
 
     """change to rawreads directory to add reads there"""
     try:

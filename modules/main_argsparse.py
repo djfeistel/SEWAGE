@@ -14,7 +14,7 @@ def main_sewage_menu():
                                        dest='subcommand', 
                                        description='', 
                                        required=True,
-                                       metavar='SEWAGE [amplicon, enrich, details]')
+                                       metavar='Select one option')
 
     # Subparser for "amplicon" subcommand
     amplicon_parser = subparsers.add_parser('amplicon', help='Generate amplicons from a primer scheme')
@@ -50,7 +50,7 @@ def main_sewage_menu():
     amplicon_parser.set_defaults(func=generate_amplicons)
 
     # Subparser for "sequence" subcommand
-    enrich_parser = subparsers.add_parser('enrich', help='Generate sequence data from amplicons')
+    enrich_parser = subparsers.add_parser('enrich', help='Generate enriched sequence data at equal or unequal proporitons from amplicons')
     required_pathway = enrich_parser.add_argument_group("Input and Output Parameters", "-i/--in is required")
     required_pathway.add_argument(
         "-i", "--in", 
@@ -64,12 +64,12 @@ def main_sewage_menu():
     )
     required_pathway.add_argument(
         "-o", "--out", 
-        help="Name of output directory for storage (if not specificed, default is 'SEWAGE_' + 10 random alphanumeric characters).", 
+        help="Name of output directory for storage [default='SEWAGE_enrich'].", 
         required=False,
         dest='out',
         metavar='STR',
         type=str,
-        default=None
+        default="SEWAGE_enrich"
     )
     required_pathway.add_argument(
         "-O", "--out_pathway", 
@@ -81,19 +81,30 @@ def main_sewage_menu():
         default='.'
     )
     # Create a group for the "Propirtions" section
-    proportions_options = enrich_parser.add_argument_group("Proportion options [default is -p r -rs 13]", "")
+    proportions_options = enrich_parser.add_argument_group("Proportion options [default is -p v -V 0.8 -rs 13]", "")
     proportions_options.add_argument(
         "-p", "--proportion", 
-        help="Generate random (r) or equal (e) proportions of reads", 
+        help="Generate a dVOC (v), random (r), or equal (e) proportion read set", 
         required=False,
         dest="proportion",
-        default='r',
+        default='v',
         type=str,
-        choices=['r', 'e']
-    )    
+        choices=['v', 'r', 'e']
+    )
+    proportions_options.add_argument(
+        "-V", "-dVOC",
+        help="Proporiton of dVOC  [default=0.8]. NOTE: End proportion value might vary slighlty. \
+            Valuse >= 1 are converted to 0.99",
+        required=False,
+        dest="dVOC",
+        type=float,
+        default=0.8,
+        metavar="FLOAT"
+
+    )
     proportions_options.add_argument(
         "-rs", "--rndSeed", 
-        help="Random seed used for generating random (-p r) proportions [default=13]", 
+        help="Random seed used for generating dVOC and random proportions [default=13]", 
         metavar='INT',
         default=13,
         type=int,
@@ -242,7 +253,7 @@ def main_sewage_menu():
     # details about tool
     enrich_parser.set_defaults(func=EnrichmentWorkflow)
 
-    details_parser = subparsers.add_parser('details', help='Print a message')
+    details_parser = subparsers.add_parser('details', help='Details about this tool and other information')
     details_parser.set_defaults(func=details)
     
     args = parser.parse_args()

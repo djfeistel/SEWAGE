@@ -19,6 +19,7 @@ sys.path.append(modules_dir)
 # internal functions
 from main_argsparse import main_sewage_menu
 from amplicons_functions import generate_amplicons
+from amplicons_functions_class import GenerateAmplicon_MainWorkflow
 from enrichment_workflow import EnrichmentWorkflow
 from log_functions import logFile, logFile_initials
 from detailed_message import details
@@ -32,13 +33,9 @@ def main():
     args = main_sewage_menu()
 
     if args.subcommand == "amplicon":
-        generate_amplicons(referecne_fasta_raw=args.fasta,
-                           scheme=args.scheme,
-                           sewage_dir=sewage_dir,
-                           output=args.output,
-                           output_pathway=args.pathway)
-    elif args.subcommand == "details":
-        details()
+        sewage_home_dir = os.path.dirname(os.path.realpath(__file__))
+        GenerateAmplicon_MainWorkflow(args.fasta, args.scheme, sewage_home_dir, args.output, args.pathway)
+
     elif args.subcommand == "enrich":
         EnrichmentWorkflow(
             args=args,
@@ -46,6 +43,7 @@ def main():
             dir_name=args.out,
             out_pathway=args.out_pathway,
             proportion=args.proportion,
+            dVOC=args.dVOC,
             rndSeed=args.rndSeed,
             pfold= args.pfold,
             ss=args.ss,
@@ -64,124 +62,8 @@ def main():
             qs=args.qs,
             qs2=args.qs2,
         )
-
-    # '''check if art_illumina is in pathway before starting any work'''
-    # if not check_art_illumina_command()[0]:
-    #     print(f"\n'art_illumina' was not found in your pathway {check_art_illumina_command()[1]}\n", file=sys.stderr)
-    #     sys.exit(1)
-    
-    # fasta_in = args.fasta #pathway or file
-    # dir_name = args.out #Default None but still passed
-    # out_pathway = os.path.realpath(args.out_pathway)
-
-    # '''check if fasta_in is a pathway or file exists or None'''
-    
-    # fasta_pathway_list = None
-    # fasta_type = None
-    # if fasta_in is None:
-    #     print(f"\nPlease specify a pathway or file name for the -i flag\n", file=sys.stderr)
-    #     sys.exit(0)
-    # elif os.path.isdir(fasta_in):
-    #     fasta_pathway_list = globFastAfiles(fasta_in)
-    #     fasta_type = "PATHWAY"
-    # elif os.path.isfile(fasta_in):
-    #     fasta_pathway_list = listOfFastaPathways(fasta_in)
-    #     fasta_type = "FILE"
-    # else:
-    #     print(f"\n{fasta_in} is neither a file nor a pathway.\n", file=sys.stderr)
-    #     sys.exit(1)
-
-    # '''check if out_pathway and dir_name exits'''
-    # if not os.path.isdir(out_pathway):
-    #     print(f"\n{out_pathway} is not a valid pathway\n", file=sys.stderr)
-    #     sys.exit(1)
-
-    # '''make storage dir'''
-    # parent_dir = parentDir_pathway(dir_pathway=out_pathway, 
-    #                                dir_name=dir_name)
-    # try:
-    #     os.mkdir(parent_dir)
-    #     rawreads_dir = os.path.join(parent_dir, "00.RAWREADS")
-    #     logs_dir = os.path.join(parent_dir, "99.LOGS") #logs for art commands
-    #     os.mkdir(rawreads_dir)
-    #     os.mkdir(logs_dir)
-    # except FileExistsError:
-    #     print(f"\nDirectory '{os.path.basename(parent_dir)}' already exists in pathway. Choose a different name.\n", file=sys.stderr)
-    #     sys.exit(0)
-    # except OSError as e:
-    #     print(f"Failed to create directory: {e}")
-    #     sys.exit(0)
-
-    # '''
-    # if you have made it this far, there is no turning back...
-    # your journy starts now...
-    # '''
-    # '''logging starts here'''
-    # logFile(parent_dir=parent_dir) #initiat logging file
-    # logFile_initials(args=args, 
-    #                  fasta_in=fasta_in, 
-    #                  fasta_type=fasta_type, 
-    #                  parent_dir=parent_dir,
-    #                  fasta_pathway_list=fasta_pathway_list)
-    
-    # '''which proportion do you want?'''
-
-    # if args.proportion == 'e':
-    #     fasta_proportions_list = equalProportions(fasta_pathway_list=fasta_pathway_list)
-    # else:
-    #     rdmSd = args.rndSeed
-    #     fasta_proportions_list = randomProportions(fasta_pathway_list=fasta_pathway_list,
-    #                                                random_seed=rdmSd)
-
-    # '''change to rawreads directory to add reads there'''
-    # try:
-    #     os.chdir(rawreads_dir)
-    #     #print(f"Data will be saved in: {os.getcwd()}\n", file=sys.stderr)
-    #     logging.info(f"Data saved in: {rawreads_dir}")
-    #     logging.info(f"Simulated information saved in: {logs_dir}")
-    # except Exception as e:
-    #     print(f"Error occurred while changing to the directory: {e}")
-
-    # '''just for fun :)'''
-    # countdown()
-
-    # for item in tqdm(fasta_proportions_list, desc="Processing", unit="tuple", dynamic_ncols=False):
-    # #for fasta_file, fasta_proportion in fasta_proportions_list:
-    #     fasta_file, fasta_proportion = item
-    #     logging.info(f"Simulation reads for {fasta_file}")
-    #     logging.info(f"Proporiton is set at {fasta_proportion}")
-
-    #     artIlluminaSubprocess(fastaFile=fasta_file,
-    #                           log_dir=logs_dir,
-    #                           proportion=fasta_proportion,
-    #                           pfold=args.pfold,
-    #                           ss=args.ss,
-    #                           l=args.l,
-    #                           m=args.m,
-    #                           s=args.s,
-    #                           ir=args.ir,
-    #                           ir2=args.ir2,
-    #                           dr=args.dr,
-    #                           dr2=args.dr2,
-    #                           rndSeed=args.rndSeed_art_illumina,
-    #                           maxIndel=args.maxIndel,
-    #                           nf=args.nf,
-    #                           qL=args.qL,
-    #                           qU=args.qU,
-    #                           qs=args.qs,
-    #                           qs2=args.qs2) 
-    
-    # '''concatinate fastq files into one file with basename of parent_dir as name'''
-    # concatenateFastQfiles(parent_dir=parent_dir, 
-    #                       rawreads_dir=rawreads_dir, 
-    #                       output_name=os.path.basename(parent_dir))
-    # '''write a file with the pathways and proporitons'''
-    # writeProportionFile(fasta_pathway_list=fasta_proportions_list, 
-    #                     parent_dir=parent_dir)
-
-    # print(f"\nFinished creating 'Sewage' samples :)\n", file=sys.stderr)
-    # logging.info(f"Finished creating 'Sewage' samples :)")
-
+    elif args.subcommand == "details":
+        details()
 
 if __name__ == "__main__":
     main()

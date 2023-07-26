@@ -131,6 +131,8 @@ def generate_amplicons(
             elif "vsl1a" in scheme:
                 forward_primer = primer_seqs[0]
                 reverse_primer = primer_seqs[1]
+            else:
+                print(f"Scheme {scheme} was not found.  Refer to the help menu for available schemes", file=sys.stderr)
 
             index_amplicon_list = find_primers_index(
                 ref_seq=ref_sequence,

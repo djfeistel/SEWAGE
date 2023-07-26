@@ -18,16 +18,8 @@ def writeProportionFile(fasta_pathway_list:str, parent_dir:str)->None:
         for file, prop in fasta_pathway_list:
             wf.write(f"{file}\t{prop}\n")
 
-def parentDir_pathway(dir_pathway:str, dir_name:str=None):
-    if dir_name is None:
-        '''create random string for directory is dir_name is None'''
-        characters = string.ascii_letters + string.digits
-        random_string = ''.join(random.choices(characters, k=10))
-        dir_name = "SEWAGE_" + random_string
-    else:
-        dir_name = "SEWAGE_" + dir_name
-    pathway = os.path.realpath(os.path.join(dir_pathway, dir_name))
-    return pathway
+def parentDir_pathway(dir_pathway:str, dir_name:str):
+    return os.path.realpath(os.path.join(dir_pathway, dir_name))
 
 
 def concatenateFastQfiles(rawreads_dir, parent_dir, output_name):
