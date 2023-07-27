@@ -55,7 +55,7 @@ From the code above, the results would be stored in a directory called ```SEWAGE
 |primer-name|reference-name|start-position|end-potision|amplicon-length (bp)|
 |:----:|:----:|:-----------:|:-----------:|:-----------:|
 
-###Comments:
+### Comments:
 1.) Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one is missing, the amplicion for that primers set will not be amplified and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify
 2.) If a primer did not amplify, the log file will indicate this by stating the primer name followed by "No Amplification"
 
