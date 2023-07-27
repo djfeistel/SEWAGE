@@ -62,9 +62,12 @@ From the code above, the results would be stored in a directory called ```SEWAGE
 The ```SEWAGE_amplicon``` directory is use as input for the next command: ```SEWAGE enrich```
 
 ## Generate wastewater sequence data
-USing the previously generated 
+Using the previously generated amplicons, we can supply the ```SEWAGE_amplicon``` directory as input with the ```--in```.  There are many options when using this command; however, the only required flag is the ```--in``` and the other other flags are set with defaults which you can read below in the help menu section.  The main default setting to be aware of are the ```Proportion options```. By default, these are set to ```-p v -V 0.8 -rs 13``` which means that the proportion (```-p```) is set up with the ```v``` choice which creates a heterogeneous sequence data set at random proporitons (which can be reproduced using the random seed ```-rs``` flag) where a single reference genomes is chosen at random to be the dominant variant of concern (dVOC) and represent 80% of the population (i.e. ```-V 0.8```).  If you do not want a single genome to represent the dVOC, use the ```-p r``` flag which creates heterogeneous sequence data at random propotions.  Useign the random seed flag ```-rs``` will allow for these sequence reads to be reproducible.
+
+For those parameters available to use in ART, we have set many of those to optimal settings so that the reads generated are not altered (i.e. no indels or mutations).  However, you do have the ability to modify them in the case of creating exploratory datasets that do no exactly match those of the reference genomes by introducing indels.  You may also vary the quality scorse also.  The reason for keeping these options in an optimal or "perfect" setting is because that many SARS-CoV-2 clinical genomes have been sequences (i.e. GISAID) and there are signature mutation between and within variants (e.g. Delta and Omicron variants have there own signature mutations while variants within Omicron like BQ.1 and XBB.1.5 also have there own signature mutations).
+
 Minimal Usage:
-```SEWAGE enrich -i pathway/to/SEWAGE_amplicon```
+```SEWAGE enrich -i pathway/to/SEWAGE_amplicon/```
 
 Help Menu:
 ```
