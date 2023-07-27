@@ -1,14 +1,17 @@
 # SEWAGE
 ### Synthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations
+### Synthetically Enrichmented Wastewater  sequencing for assessing Genomic Variants 
 
-***SEWAGE*** is entirely written in Python 3 and is tested on Python 3.8.3. As of now, the only dependencies 
-are tqdm<sup>1</sup>, NumPy<sup>2</sup> and ART<sup>3</sup>. However, in the future ART will 
-be replaced with an internal algorithm for simulating reads.
+SEWAGE is a tool for generating reproducible sequence data which represents a heterogeneous population of closely related genomes. Specifically, the tool was designed to recreate sequence data that resembles a mixed SARS-CoV-2 population derived from a wastewater sample by using targeted enrichment or tiled amplicon approaches. ALthough the tool currently only offers SARS-CoV2 [https://github.com/artic-network/primer-schemes ARTIC](https://github.com/artic-network/primer-schemes) and VarSkip [https://github.com/nebiolabs/VarSkip VarSkip](https://github.com/nebiolabs/VarSkip)
+
+As it currently stands, SEWAGE offers the ability to produce the expected amplicons from set of closely related reference genomes given a set of primers and create Illumina short-read data sets at various .  Users can choice to create 
 
 For detailed information about the tool: ```SEWAGE --details```
 
 ## Installing dependencies via conda
-Note: It is not necessary to use conda as long as you have ***tqdm*** and ***NumPY*** installed for Python 3 and ***art_illuina*** in your $PATH
+SEWAGE is written in Python 3 version 3.8.3. Currently, the only dependencies 
+are tqdm<sup>1</sup>, NumPy<sup>2</sup> and ART<sup>3</sup>. However, ART will eventually be replaced with an internal algorithm for simulating reads.
+*Note: It is not necessary to use conda as long as you have ***tqdm*** and ***NumPY*** installed for Python 3 and ***art_illuina*** in your $PATH*
 ```
 conda create -n SEWAGE_env python==3.8.3 --yes
 conda activate SEWAGE_env
