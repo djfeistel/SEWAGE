@@ -1,7 +1,6 @@
 # SEWAGE
-### Synthetically Engenered Wastewater sequence data for Assessing Genomic variants in Environmental populations
-### Synthetic Enrichment of Wastewater derived Amplicions  sequencing for assessing Genomic Variants 
-### Synthetically Engenered Wastewater-like sequence data for Assessing Genomic Entities
+### Synthetically Engineered Wastewater sequence data for Assessing Genomic variants in Environmental populations 
+### Synthetically Engineered Wastewater-like sequence data for Assessing Genomic Entities
 SEWAGE is a tool for generating reproducible sequence data representing a heterogeneous population of closely related species. Specifically, it was designed to mirror sequence data that resembles a mixed SARS-CoV-2 population derived from a wastewater sample by using targeted enrichment or tiled amplicon approaches. 
 
 SEWAGE currently offers two main functionalities: 1) the ability to produce amplicons for each genome from a set of closely related reference genomes using a set of primers and 2) create Illumina short-read data sets from those amplicions that mimic heterogeneous populations of closely related species at various proportions.  Users can choice to create. Although the tool currently only offers SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip)
