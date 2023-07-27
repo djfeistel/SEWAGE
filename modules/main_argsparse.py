@@ -6,7 +6,7 @@ from detailed_message import details
 def main_sewage_menu():
     # Create the main parser
     parser = argparse.ArgumentParser(prog="SEWAGE",
-                                     description=f"SEWAGE NEEDS A NAME\n",
+                                     description=f"Synthetically Engineered Wastewater sequence data for Assessing Genomic Entities\n",
                                      epilog="")
 
     # Create subparsers
