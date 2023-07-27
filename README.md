@@ -54,12 +54,10 @@ optional arguments:
 ### SEWAGE Amplicon Output:
 
 From the code above, the results would be stored in a directory called ```SEWAGE_amplicon``` by default in the current working directory.  For each reference genome, a ```_amplicons.fasta``` and ```_amplicons.log``` file is created.  The multi-fasta file contains the amplicons generated and the log is a tab seperated file with:  
-|primer-name|reference-name|start-position|end-potision|amplicon-length (bp)|
 
-|Primer |Reference |start positon |
-|:----:|:----:|:-----------:|
-|*.fasta |text file | Multi-fasta file with expected amplicion sequences|
-|
+|primer-name|reference-name|start-position|end-potision|amplicon-length (bp)|
+|:----:|:----:|:-----------:|:-----------:|:-----------:|
+
 
 
 For detailed information about paramters:  
