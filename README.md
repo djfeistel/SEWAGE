@@ -6,7 +6,9 @@ SEWAGE is a tool for generating reproducible sequence data representing a hetero
 
 SEWAGE currently offers two main functionalities: 1) the ability to produce amplicons for each genome from a set of closely related reference genomes using a set of primers and 2) create Illumina short-read data sets from those amplicions that mimic heterogeneous populations of closely related species at various proportions.
 
+### Notes:
 SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species.
+SEWAGE can only create Illumia short-reads as of now.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
 
 ## Installing dependencies via conda
 SEWAGE is written in Python 3 version 3.8.3 and the only dependencies are tqdm<sup>1</sup>, NumPy<sup>2</sup> and ART<sup>3</sup>. However, ART will eventually be replaced in future versions of SEWAGE with an internal algorithm for simulating long and short reads.  
