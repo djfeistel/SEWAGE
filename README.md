@@ -6,7 +6,7 @@ SEWAGE is a tool for generating reproducible sequence data representing a hetero
 
 SEWAGE currently offers two main functionalities: 1) the ability to produce amplicons for each genome from a set of closely related reference genomes using a set of primers and 2) create Illumina short-read data sets from those amplicions that mimic heterogeneous populations of closely related species at various proportions.
 
-### Notes:
+### Comments:
 SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species.
 SEWAGE can only create Illumia short-reads as of now.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
 
@@ -25,8 +25,11 @@ Once you have installed the conda environment you can add SEWAGE as a symlink to
 ln -s <pathway/to/SEWAGE> <pathway/to/bin>
 ```
 
-## Generating amplicons from reference genomes
+## Generating amplicons from a set of reference genomes
 The first step is to generate amplicons from reference genomes of any size.  Reference genomes must be store in a directory as fasta files.  Each reference fasta file must only include a single reference genome. There are two required flags: The ```--fasta``` flag is used to tell SEWAGE where the fasta files are stored and the ```--scheme``` flag sets the primers to use (stored in the ```scheme``` directory). SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species. The optional flags ```--output``` and ```--pathway``` set the name of the output (default="SEWAGE_amplicons") and the pathway for those amplicons to be stored (default='.'), respectivly.
+###Comments:
+1.) Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one is missing, the amplicion for that primers set will not be amplified and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify
+2.) 
 
 Minimal Usage:  
 ```
@@ -50,8 +53,11 @@ optional arguments:
 ```
 ### SEWAGE Amplicon Output:
 
-|Name |Type |Description |
+From the code above, the results would be stored in a directory called ```SEWAGE_amplicon``` by default in the current working directory.  For each reference genome, a ```_amplicons.fasta``` and ```_amplicons.log``` file is created.  The multi-fasta file contains the amplicons generated and the log is a tab seperated file with ```primer-name\treference\tstart position\tend potision\tamplicon length (bp)```
+
+|Primer |Reference |start positon |
 |:----:|:----:|:-----------:|
+|*.fasta |text file | Multi-fasta file with expected amplicion sequences|
 |
 
 
