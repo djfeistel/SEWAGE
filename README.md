@@ -2,16 +2,15 @@
 
 ### Synthetically Engineered Wastewater sequence data for Assessing Genomic Entities
 
-SEWAGE is a tool for generating reproducible sequence data representing a heterogeneous population of closely related species. Specifically, it was designed to mirror sequence data that resembles a mixed SARS-CoV-2 population derived from a wastewater sample by using targeted enrichment or tiled amplicon approaches. SEWAGE was developed to help assess the accuracy of different alignment/mappers and relative abundance calculation tools used in the National Wastewater Survaillance Systems (NWSS) SARS-CoV-2 Wastewater detection pipeline "AquaScope" (CITE GITHUB/GITLAB).
+SEWAGE is a tool for generating reproducible sequence data representing a heterogeneous population of closely related species. Specifically, it was designed to mirror sequence data that resembles a mixed SARS-CoV-2 population derived from a wastewater sample by using targeted enrichment or tiled amplicon approaches.
 
 SEWAGE currently offers two main functionalities: 1) the ability to produce amplicons for each genome from a set of closely related reference genomes using a set of primers and 2) create Illumina short-read data sets from those amplicions that mimic heterogeneous populations of closely related species at various proportions.
 
-### Comments:
-SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species.
-SEWAGE can only create Illumia short-reads as of now.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
+### Comments about SEWAGE:
+SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species. As of now, SEWAGE can only create Illumia short-reads dur to its reliability on the tool ART<sup>1</sup>.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
 
 ## Installing dependencies via conda
-SEWAGE is written in Python 3 version 3.8.3 and the only dependencies are tqdm<sup>1</sup>, NumPy<sup>2</sup> and ART<sup>3</sup>. However, ART will eventually be replaced in future versions of SEWAGE with an internal algorithm for simulating long and short reads.  
+SEWAGE is written in Python 3 version 3.8.3 and the only dependencies are tqdm<sup>2</sup>, NumPy<sup>3</sup> and ART<sup>1</sup>. However, ART will eventually be replaced in future versions of SEWAGE with an internal algorithm for simulating long and short reads.  
 
 *Note: It is not necessary to use conda as long as you have ***tqdm*** and ***NumPY*** installed and ***art_illuina*** in your $PATH*
 ```
@@ -67,7 +66,7 @@ Using the previously generated amplicons, we can supply the ```SEWAGE_amplicon``
 For those parameters available to use in ART, we have set many of those to optimal settings so that the reads generated are not altered (i.e. no indels or mutations).  However, you do have the ability to modify them in the case of creating exploratory datasets that do no exactly match those of the reference genomes by introducing indels.  You may also vary the quality scorse also.  The reason for keeping these options in an optimal or "perfect" setting is because that many SARS-CoV-2 clinical genomes have been sequences (i.e. GISAID) and there are signature mutation between and within variants (e.g. Delta and Omicron variants have there own signature mutations while variants within Omicron like BQ.1 and XBB.1.5 also have there own signature mutations).
 
 Minimal Usage:
-```SEWAGE enrich -i pathway/to/SEWAGE_amplicon/```
+```SEWAGE enrich -i pathway/to/SEWAGE_amplicon```
 
 Help Menu:
 ```
@@ -133,7 +132,7 @@ ART parameters:
   -qs2 INT, --qShift2 INT
                         From 'art_illumina': the amount to shift every second-read quality score by
 ```
-### Output
+### Output data from ```SEWAGE enrich```
 |Name |Type |Description |
 |:----:|:----:|:-----------:|
 |proportions_list.txt|text file|Two column file with col1=pathway/to/file.fasta and col2=proporiton (float)|
@@ -143,6 +142,6 @@ ART parameters:
 
 ## Citations
 
-1. https://github.com/tqdm/tqdm
-2. https://github.com/numpy/numpy
-2. Huang, W., Li, L., Myers, J. R., & Marth, G. T. (2012). ART: a next-generation sequencing read simulator. Bioinformatics, 28(4), 593-594.
+1. Huang, W., Li, L., Myers, J. R., & Marth, G. T. (2012). ART: a next-generation sequencing read simulator. Bioinformatics, 28(4), 593-594.
+2. https://github.com/tqdm/tqdm
+3. https://github.com/numpy/numpy
