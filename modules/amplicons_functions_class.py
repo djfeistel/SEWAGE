@@ -210,13 +210,13 @@ class GenerateAmplicons:
                     primer_name = defline.split('~~~')[0]
 
                     if amplicon_items_list is None:
-                        wf_logs.write(f"{primer_name}\tNo Amplification\n")
+                        wf_logs.write(f"{primer_name}\t{self.scheme}\tNo Amplification\n")
 
                     elif amplicon_items_list is not None:
                         amplicon_sequence, position_list = amplicon_items_list
                         start_pos, end_pos = position_list
 
-                        line = '\t'.join([primer_name, ref_name, str(start_pos), str(end_pos), str(len(amplicon_sequence))])
+                        line = '\t'.join([primer_name, self.scheme, ref_name, str(start_pos), str(end_pos), str(len(amplicon_sequence))])
                         wf_logs.write(f"{line}\n")
 
                         wf_amps.write(f">{defline}\n")

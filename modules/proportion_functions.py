@@ -46,6 +46,14 @@ def dominantVariantProportions(fasta_pathway_list:list, random_seed:int=13, dVOC
     for i in range(len(random_list)):
         if i != random_index:
             random_list[i] *= scaling_factor
+        for i in range(len(random_list)):
+            if random_list[i] < 0.001:
+                random_list[i] += 0.001
+
+    # Normalize the list to ensure the sum of the values equals 1 again
+    total_sum = sum(random_list)
+    random_list = [val / total_sum for val in random_list]
+
     random.shuffle(random_list)
     fasta_proportions = list(zip(fasta_pathway_list, random_list))
     return fasta_proportions
