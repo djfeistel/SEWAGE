@@ -28,7 +28,9 @@ ln -s <pathway/to/SEWAGE> <pathway/to/bin>
 ```
 
 ## Generate amplicons from a set of reference genomes
-The first step is to generate amplicons from reference genomes of any size.  Reference genomes must be store in a directory as fasta files.  Each reference fasta file must only include a single reference genome. There are two required flags: The ```--fasta``` flag is used to tell SEWAGE where the fasta files are stored and the ```--scheme``` flag sets the primers to use (stored in the ```scheme``` directory). SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species. The optional flags ```--output``` and ```--pathway``` set the name of the output (default="SEWAGE_amplicons") and the pathway for those amplicons to be stored (default='.'), respectivly.
+The first step is to generate amplicons from reference genomes of any size.  Reference genomes must be store as fasta files and each reference fasta file must only include a single reference genome. The reference fasta files should be stored in a directory together with the extention ".fasta", ".fa", or ".fsa".  Other files may be stored in the directory with the reference files.
+
+There are two required flags: The ```--fasta``` flag is used to tell SEWAGE where the fasta files are stored and the ```--scheme``` flag sets the primers to use (stored in the ```scheme``` directory). SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species. The optional flags ```--output``` and ```--pathway``` set the name of the output (default="SEWAGE_amplicons") and the pathway for those amplicons to be stored (default='.'), respectivly.
 
 Minimal Usage:  
 ```
@@ -57,16 +59,16 @@ From the code above, the results would be stored in a directory called ```SEWAGE
 |primer-name|reference-name|start-position|end-potision|amplicon-length (bp)|
 |:----:|:----:|:-----------:|:-----------:|:-----------:|
 
-### Comments:
-1. Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one is missing, the amplicion for that primers set will not be amplified and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify
-2. If a primer did not amplify, the log file will indicate this by stating the primer name followed by "No Amplification"
+### Comments about creating amplicons:
+Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one primer is missing, the amplicion will not be amplified for that primer and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify by stating the primer name followed by "No Amplification"
 
-The ```SEWAGE_amplicon``` directory is use as input for the next command: ```SEWAGE enrich```
+
+The ```SEWAGE_amplicon``` directory (or whatever you choose to name it) is used as input for the next command: ```SEWAGE enrich```
 
 ## Generate wastewater sequence data
-Using the previously generated amplicons, we can supply the ```SEWAGE_amplicon``` directory as input with the ```--in```.  There are many options when using this command; however, the only required flag is the ```--in``` and the other other flags are set with defaults which you can read below in the help menu section.  The main default setting to be aware of are the ```Proportion options```. By default, these are set to ```-p v -V 0.8 -rs 13``` which means that the proportion (```-p```) is set up with the ```v``` choice which creates a heterogeneous sequence data set at random proporitons (which can be reproduced using the random seed ```-rs``` flag) where a single reference genomes is chosen at random to be the dominant variant of concern (dVOC) and represent 80% of the population (i.e. ```-V 0.8```).  If you do not want a single genome to represent the dVOC, use the ```-p r``` flag which creates heterogeneous sequence data at random propotions.  Useign the random seed flag ```-rs``` will allow for these sequence reads to be reproducible.
+Using the previously generated amplicons, we can supply the ```SEWAGE_amplicon``` directory as input with the ```--in``` flag.  There are many options when using this command; however, the only required flag is the ```--in``` and the other other flags are set with defaults which you can read below in the help menu section.  The main default setting to be aware of are the ```Proportion options```. By default, these are set to ```-p v -V 0.8 -rs 13``` which means that the proportion (```-p```) is set up with the ```v``` choice which creates a heterogeneous sequence data set at random proporitons (which can be reproduced using the random seed ```-rs``` flag) and a single reference genomes is chosen at random to be the dominant variant of concern (dVOC), representing 80% of the population (i.e. ```-V 0.8```) relative abundance.  If you do not want a single genome to represent the dVOC, use the ```-p r``` flag which creates heterogeneous sequence data at random propotions.  Using the random seed flag ```-rs``` allows for these sequence reads to be reproducible.
 
-For those parameters available to use in ART, we have set many of those to optimal settings so that the reads generated are not altered (i.e. no indels or mutations).  However, you do have the ability to modify them in the case of creating exploratory datasets that do no exactly match those of the reference genomes by introducing indels.  You may also vary the quality scorse also.  The reason for keeping these options in an optimal or "perfect" setting is because that many SARS-CoV-2 clinical genomes have been sequences (i.e. GISAID) and there are signature mutation between and within variants (e.g. Delta and Omicron variants have there own signature mutations while variants within Omicron like BQ.1 and XBB.1.5 also have there own signature mutations).
+For those parameters available to use in ART<sup>1</sup>, we have set many of those to optimal settings so that the reads generated are not altered (i.e. no indels or mutations).  However, you have the ability to modify such paramters including but not limited to the rate of inserions and/or deletions and quality scores, in the case of creating exploratory datasets.
 
 Minimal Usage:
 ```SEWAGE enrich -i pathway/to/SEWAGE_amplicon```
@@ -135,13 +137,18 @@ ART parameters:
   -qs2 INT, --qShift2 INT
                         From 'art_illumina': the amount to shift every second-read quality score by
 ```
+
 ### Output data from ```SEWAGE enrich```
+
+The output data will be stored in the current working directory with the default name ```SEWAGE_enrich``` if the ```--out``` flag is not specified.  These files and directories include:
 |Name |Type |Description |
 |:----:|:----:|:-----------:|
 |proportions_list.txt|text file|Two column file with col1=pathway/to/file.fasta and col2=proporiton (float)|
-|<input_name>_1.fastq|fastq file|Forward reads|
-|<input_name>_2.fastq|fastq file|Reverse reads|
-|<input_name>_logfile.log|text file|Information about the run|
+|SEWAGE_enrich_1.fastq|fastq file|Forward reads for all regerence genomes|
+|SEWAGE_enrich_2.fastq|fastq file|Reverse reads for all regerence genomes|
+|SEWAGE_enrich_logfile.log|text file|Information about the run|
+|00.RAWREADS|directory|Raw reads storage for each reference genome|
+|01.LOGS|directory|Information about the "art_illumina" sequencing run|
 
 ## Citations
 
