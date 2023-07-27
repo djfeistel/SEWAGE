@@ -1,5 +1,5 @@
-# SEWAGE
-### Synthetically Engineered Wastewater sequence data for Assessing Genomic variants in Environmental populations 
+# SEWAGE 
+
 ### Synthetically Engineered Wastewater sequence data for Assessing Genomic Entities
 
 SEWAGE is a tool for generating reproducible sequence data representing a heterogeneous population of closely related species. Specifically, it was designed to mirror sequence data that resembles a mixed SARS-CoV-2 population derived from a wastewater sample by using targeted enrichment or tiled amplicon approaches. SEWAGE was developed to help assess the accuracy of different alignment/mappers and relative abundance calculation tools used in the National Wastewater Survaillance Systems (NWSS) SARS-CoV-2 Wastewater detection pipeline "AquaScope" (CITE GITHUB/GITLAB).
