@@ -8,6 +8,8 @@ SEWAGE currently offers two main functionalities for producing wastewater-like s
 1. The ability to produce amplicons that mimic tiled-amplicon sequencing approaches for each input genome using a set of primers.
 2. Create Illumina short-read data sets from those amplicions that mimic a heterogeneous populations of closely related species at various proportions.
 
+SEWAGE is always a work in progress...
+
 ### Comments about SEWAGE:
 1. SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets.
 2. As of now, SEWAGE can only create Illumia short-reads dur to its reliability on the tool ART<sup>1</sup>.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
