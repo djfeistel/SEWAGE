@@ -60,7 +60,7 @@ From the code above, the results would be stored in a directory called ```SEWAGE
 |:----:|:----:|:-----------:|:-----------:|:-----------:|
 
 ### Comments about creating amplicons:
-Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one primer is missing, the amplicion will not be amplified for that primer and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify by stating the primer name followed by "No Amplification"
+Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one primer is missing, the amplicion will not be amplified for that primer and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify by stating the primer name followed by "No Amplification".
 
 
 The ```SEWAGE_amplicon``` directory (or whatever you choose to name it) is used as input for the next command: ```SEWAGE enrich```
@@ -149,6 +149,9 @@ The output data will be stored in the current working directory with the default
 |SEWAGE_enrich_logfile.log|text file|Information about the run|
 |00.RAWREADS|directory|Raw reads storage for each reference genome|
 |01.LOGS|directory|Information about the "art_illumina" sequencing run|
+
+### Comments about creating sequence data
+As of v0.1.0, amplicon coverage is generated equally 
 
 ## Citations
 
