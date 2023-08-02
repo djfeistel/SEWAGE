@@ -10,10 +10,7 @@ SEWAGE currently offers two main functionalities for producing wastewater-like s
 
 ### Comments about SEWAGE:
 1. SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions in the ```scheme/``` directory and can be accessed using the ```-s/--scheme``` flag when using ```SEWAGE amplicon```.
-2. Users who want to use there own primer scheme can do so using the ```-u/--user``` flag when using ```SEWAGE amplicon```.  The primer scheme file must be a tab seperate file with three columns with:  
-|#Forward Sequence|Reverse Sequence|Primer Name|
-|:---------------:|:--------------:|:---------:|
-
+2. Users who want to use there own primer scheme can do so using the ```-u/--user``` flag when using ```SEWAGE amplicon```.  The primer scheme file must be a tab seperate file with three columns with the forwars sequence, reverse sequence and primer name in the first, second, and third column, respectively. The reverse primer supplied in the user file will be converted into the reverse complimentary e.g. ATGC --> GCAT
 3. As of now, SEWAGE can only create Illumia short-reads dur to its reliability on the tool ART<sup>1</sup>.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
 
 ## Installing dependencies via conda
