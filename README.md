@@ -9,8 +9,11 @@ SEWAGE currently offers two main functionalities for producing wastewater-like s
 2. Create Illumina short-read data sets from those amplicions that mimic a heterogeneous populations of closely related species at various proportions.
 
 ### Comments about SEWAGE:
-1. SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets.
-2. As of now, SEWAGE can only create Illumia short-reads dur to its reliability on the tool ART<sup>1</sup>.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
+1. SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions in the ```scheme/``` directory and can be accessed using the ```-s/--scheme``` flag when using ```SEWAGE amplicon```.
+2. Users who want to use there own primer scheme can do so using the ```-u/--user``` flag when using ```SEWAGE amplicon```.  The primer scheme file must be a tab seperate file with three columns with:
+|Forward Sequence|Reverse Sequence|Primer Name|
+
+3. As of now, SEWAGE can only create Illumia short-reads dur to its reliability on the tool ART<sup>1</sup>.  We are actively working creating an internal alrogithm for generating short and long read data. Updates will be made when available.
 
 ## Installing dependencies via conda
 SEWAGE is written in Python 3 version 3.8.3 and the only dependencies are tqdm<sup>2</sup>, NumPy<sup>3</sup> and ART<sup>1</sup>. However, ART will eventually be replaced in future versions of SEWAGE with an internal algorithm for simulating long and short reads.  
