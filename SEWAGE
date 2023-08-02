@@ -34,7 +34,7 @@ def main():
 
     if args.subcommand == "amplicon":
         sewage_home_dir = os.path.dirname(os.path.realpath(__file__))
-        GenerateAmplicon_MainWorkflow(args.fasta, args.scheme, sewage_home_dir, args.output, args.pathway)
+        GenerateAmplicon_MainWorkflow(args.fasta, args.scheme, args.user, sewage_home_dir, args.output, args.pathway)
 
     elif args.subcommand == "enrich":
         EnrichmentWorkflow(

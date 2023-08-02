@@ -9,12 +9,14 @@ class GenerateAmplicons:
     def __init__(self: str,
                  fasta_pathway: str,
                  scheme: str,
+                 user: str,
                  sewage_dir: str,
                  amplicon_storage_dir: str,
                  amplicon_storage_pathway: str
                  ):
         self.fasta_pathway = os.path.realpath(fasta_pathway)
         self.scheme = scheme
+        self.user = user
         self.sewage_dir = os.path.realpath(sewage_dir)
         self.amplicon_storage_dir = amplicon_storage_dir
         self.amplicon_storage_pathway = os.path.realpath(amplicon_storage_pathway)
@@ -26,6 +28,8 @@ class GenerateAmplicons:
         fasta_files = [f for f in os.listdir(self.fasta_pathway) if os.path.isfile(os.path.join(self.fasta_pathway, f)) and f.lower().endswith(('.fasta', '.fsa', '.fa'))]
         if not fasta_files:
             raise FileNotFoundError(f"No fasta files with allowed extensions [.fasta, .fsa, .fa] found in the directory '{self.fasta_pathway}'.")
+        if self.scheme is None and self.user is None:
+            raise TypeError(f"Must choose at least one: --scheme or --user")
         if not os.path.exists(self.sewage_dir):
             raise FileNotFoundError(f"Sewage directory '{self.sewage_dir}' does not exist.")
         if not os.path.isdir(self.sewage_dir):
@@ -63,21 +67,20 @@ class GenerateAmplicons:
         fasta_file_pathway_list = [(file, os.path.basename(file)) for file in file_pathway_list if os.path.splitext(file)[1].lower() in valid_extensions]
         if len(fasta_file_pathway_list) == 0:
             print(f"\nPathway to fasta directory did not find fasta files.", file=sys.stderr)
-            print(f"Check pathway and that valid fasta files are accepted [.fasta, .fsa, .fa]", file=sys.stderr)
+            print(f"Check pathway and that valid fasta files are accepted [.fasta, .fsa, .fa]\n", file=sys.stderr)
             sys.exit(0)
         else:
             return fasta_file_pathway_list
         
     def fasta_reference_file_to_list(self) -> list:
         '''
-        return tuple as [(fasta pathway)]
+        return tuple as [(fasta pathway)] ||| depricated for now
         '''
         return [(self.fasta_pathway, os.path.basename(self.fasta_pathway))]
     
     def read_referecne_pathway_fasta_list(self, fasta_pathway_list: list) -> dict:
         '''
         fasta_pathway_list is a list with at least one pathway to a fasta file
-        each fasta pathway can be wither single of multifasta 
         '''
         sequences = {}
         current_defline = ""  # Initialize with an empty string
@@ -90,14 +93,14 @@ class GenerateAmplicons:
                         continue  # Skip empty lines
                     if line.startswith(">"):  # Def line
                         if current_defline:
-                            sequences[current_defline] = [current_sequence, fasta_file.split('.')[0]]
+                            sequences[current_defline] = [current_sequence, os.path.splitext(fasta_file)] #fasta_file.split('.')[0]
                         current_defline = line[1:] #remove > 
                         current_sequence = ""
                     else:
                         current_sequence += line
                 # Add the last sequence after reaching the end of the file
                 if current_defline and current_sequence:
-                    sequences[current_defline] = [current_sequence, fasta_file.split('.')[0]]
+                    sequences[current_defline] = [current_sequence, os.path.splitext(fasta_file)] #removed fasta_file.split('.')[0]
             current_defline = ""
             current_sequence = ""
         return sequences
@@ -107,7 +110,10 @@ class GenerateAmplicons:
         open custom primer file in scheme dir
         return dict with primer name as key and values as [forward, reverse] primer seqs
         '''
-        scheme_pathway = os.path.join(os.path.join(self.sewage_dir, "schemes"), self.scheme + ".tsv")
+        if self.user is None and self.scheme is not None:
+            scheme_pathway = os.path.join(os.path.join(self.sewage_dir, "schemes"), self.scheme + ".tsv")
+        elif self.user is not None and self.scheme is None:
+            scheme_pathway = self.user
         primer_scheme_dict = {}
         with open(scheme_pathway, 'r') as fh:
             for line in fh:
@@ -155,6 +161,7 @@ class GenerateAmplicons:
             reverse_index_end = reverse_index_start + len(reverse_primer)
             return [forward_index, reverse_index_end]
         
+        #main code starts here
         amplicon_dict = {} 
         #key==primer name; value==amplicon or None
         for reference_sequence_defline, reference_sequence_values in ref_seq_dict.items():
@@ -165,13 +172,21 @@ class GenerateAmplicons:
                 short_read_schemes = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vss1a", "vss2a", "vss2b"]
                 long_read_schemes = ["vsl1a"]
                 
-                if any(True for x in short_read_schemes if self.scheme == x):
+                if self.scheme and not self.user:
+                    scheme_profile = self.scheme
+                    if any(True for x in short_read_schemes if self.scheme == x):
+                        forward_primer = primer_seqs[0]
+                        reverse_primer = primer_seqs[1]
+                        reverse_primer = reverse_complimentary_sequence(reverse_primer)
+                    elif any(True for x in long_read_schemes if self.scheme == x):
+                        forward_primer = primer_seqs[0]
+                        reverse_primer = primer_seqs[1]
+
+                elif self.user and not self.scheme:
+                    scheme_profile = self.user
                     forward_primer = primer_seqs[0]
                     reverse_primer = primer_seqs[1]
                     reverse_primer = reverse_complimentary_sequence(reverse_primer)
-                elif any(True for x in long_read_schemes if self.scheme == x):
-                    forward_primer = primer_seqs[0]
-                    reverse_primer = primer_seqs[1]
 
                 index_amplicon_list = primer_index_for_amplicon_seq(
                     reference_sequence=reference_sequence_seq,
@@ -182,7 +197,7 @@ class GenerateAmplicons:
                 amplicon_dict[reference_sequence_name] = {defline: sequence}'''
 
                 if not index_amplicon_list:
-                    defline = "~~~".join([primer_name, reference_sequence_defline, self.scheme, ])
+                    defline = "~~~".join([primer_name, reference_sequence_defline, scheme_profile])
                     if reference_fasta_basename in amplicon_dict:
                         amplicon_dict[reference_fasta_basename][defline] = None
                     else:
@@ -190,7 +205,7 @@ class GenerateAmplicons:
                 else:
                     amplicion_seq = str(reference_sequence_seq[index_amplicon_list[0]:index_amplicon_list[1]])
                     amplicon_length = str(len(amplicion_seq)) + "bp"
-                    defline = "~~~".join([primer_name, reference_sequence_defline, self.scheme, amplicon_length])
+                    defline = "~~~".join([primer_name, reference_sequence_defline, scheme_profile, amplicon_length])
                     if reference_fasta_basename in amplicon_dict:
                         amplicon_dict[reference_fasta_basename][defline] = [amplicion_seq, index_amplicon_list]
                     else:
@@ -199,10 +214,15 @@ class GenerateAmplicons:
     
     def write_amplicion_fasta_files(self, amplicon_storage_dir_pathway: str, amplicon_dict: dict) -> None:
 
+        if self.scheme and not self.user:
+            scheme_profile = self.scheme
+        elif self.user and not self.scheme:
+            scheme_profile = self.user
+
         for ref_name, seq_dict in amplicon_dict.items():
 
-            output_fasta = os.path.join(amplicon_storage_dir_pathway, ref_name + "_amplicons.fasta")
-            output_log = os.path.join(amplicon_storage_dir_pathway, ref_name + "_amplicons.log")
+            output_fasta = os.path.join(amplicon_storage_dir_pathway, ref_name[0] + "_amplicons.fasta")
+            output_log = os.path.join(amplicon_storage_dir_pathway, ref_name[0] + "_amplicons.log")
             
             with open(output_fasta, 'w') as wf_amps, open(output_log, 'w') as wf_logs:
             
@@ -210,13 +230,13 @@ class GenerateAmplicons:
                     primer_name = defline.split('~~~')[0]
 
                     if amplicon_items_list is None:
-                        wf_logs.write(f"{primer_name}\t{self.scheme}\tNo Amplification\n")
+                        wf_logs.write(f"{primer_name}\t{scheme_profile}\t{ref_name[0]}\tNo Amplification\n")
 
                     elif amplicon_items_list is not None:
                         amplicon_sequence, position_list = amplicon_items_list
                         start_pos, end_pos = position_list
 
-                        line = '\t'.join([primer_name, self.scheme, ref_name, str(start_pos), str(end_pos), str(len(amplicon_sequence))])
+                        line = '\t'.join([primer_name, scheme_profile, ref_name[0], str(start_pos), str(end_pos), str(len(amplicon_sequence))])
                         wf_logs.write(f"{line}\n")
 
                         wf_amps.write(f">{defline}\n")
@@ -241,13 +261,20 @@ def opts():
                                  dest='fasta')
     amplicon_parser.add_argument('-s', '--scheme', 
                                  help='Primer scheme: (Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"], \
-                                    VarSkip = ["vsl1a", "vss1a", "vss2a", "vss2b"])', 
-                                 required=True, 
+                                    VarSkip = ["vsl1a", "vss1a", "vss2a", "vss2b"]) [default=V5.3.2]', 
+                                 required=False, 
                                  type=str,
                                  choices=["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vsl1a", "vss1a", "vss2a", "vss2b"],
                                  metavar='SCHEME',
                                  dest='scheme',
-                                 default='vsl1a') #change this later
+                                 default=None) #make sure that code reflect when None is reached it does not work
+    amplicon_parser.add_argument('-u', '--user_scheme', 
+                                 help='User defined primer scheme TSV file with three columns with: Forward_seq, Reverse_seq, Primer_Name', 
+                                 required=False, 
+                                 type=str,
+                                 metavar='FILE',
+                                 dest='user',
+                                 default=None) #change this later
     amplicon_parser.add_argument('-o', '--output', 
                                  help='Output directory name for amplicon [default="SEWAGE_amplicons"]', 
                                  required=False,
@@ -265,13 +292,14 @@ def opts():
     args = amplicon_parser.parse_args()    
     return args
 
-def GenerateAmplicon_MainWorkflow(fasta, scheme, sewage_home_dir, output, pathway):
+def GenerateAmplicon_MainWorkflow(fasta, scheme, user, sewage_home_dir, output, pathway):
     '''Main workflow for creating amplicons'''
     '''removed the opts as the main_argsparser is used'''
 
     sewage_amplicon = GenerateAmplicons(fasta, 
-                                        scheme, 
-                                        sewage_home_dir, 
+                                        scheme,
+                                        user, 
+                                        sewage_home_dir,
                                         output, 
                                         pathway)
     

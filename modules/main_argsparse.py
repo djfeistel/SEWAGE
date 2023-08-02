@@ -1,6 +1,6 @@
 import argparse
 from enrichment_workflow import EnrichmentWorkflow
-from amplicons_functions import generate_amplicons
+from amplicons_functions_class import GenerateAmplicon_MainWorkflow
 from detailed_message import details
 
 def main_sewage_menu():
@@ -28,26 +28,35 @@ def main_sewage_menu():
     amplicon_parser.add_argument('-s', '--scheme', 
                                  help='Primer scheme: (Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"], \
                                     VarSkip = ["vsl1a", "vss1a", "vss2a", "vss2b"])', 
-                                 required=True, 
+                                 required=False, 
                                  type=str,
                                  choices=["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vsl1a", "vss1a", "vss2a", "vss2b"],
                                  metavar='SCHEME',
-                                 dest='scheme')
+                                 dest='scheme',
+                                 default=None)
+    amplicon_parser.add_argument('-u', '--user_scheme', 
+                                 help='User defined primer scheme TSV file with three columns with: Forward_seq, Reverse_seq, Primer_Name', 
+                                 required=False, 
+                                 type=str,
+                                 metavar='FILE',
+                                 dest='user',
+                                 default=None)
     amplicon_parser.add_argument('-o', '--output', 
-                                 help='Output Prefix name for fasta file [default="SEWAGE_amplicons.fasta"]', 
+                                 help='Output Prefix name for fasta file [default="SEWAGE_amplicon"]', 
                                  required=False,
                                  default="SEWAGE_amplicons",
                                  type=str,
                                  metavar='STR',
                                  dest='output')
     amplicon_parser.add_argument('-p', '--pathway', 
-                                 help='Pathway to storgage directory [default="."]',
+                                 help='Pathway to where "-o" is stored [default="."]',
                                  required=False, 
                                  type=str,
                                  metavar='PATHWAY',
                                  dest='pathway',
                                  default='.')
-    amplicon_parser.set_defaults(func=generate_amplicons)
+
+    amplicon_parser.set_defaults(func=GenerateAmplicon_MainWorkflow)
 
     # Subparser for "sequence" subcommand
     enrich_parser = subparsers.add_parser('enrich', help='Generate enriched sequence data at equal or unequal proporitons from amplicons')
