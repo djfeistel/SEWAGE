@@ -85,7 +85,7 @@ def main_2():
 
 
 def name_fastq_read(
-        amplicon_defline: str, 
+        amplicon_defline: str,
         sequence:str, 
         read_count:int, 
         reverse: bool=False
@@ -105,7 +105,7 @@ def name_fastq_read(
     else:
         read_type = "R1"
 
-    defline = f"@{amplicon_defline}:{read_type}:{read_count}"
+    defline = f"@{amplicon_defline}:{read_type}_{read_count}"
     
     return [defline, sequence, "+", "I"*len(sequence)]
 
@@ -165,7 +165,7 @@ def fragment_indices_list(
         seq_len: int,
         frag_len: int=250,
         read_len: int=150,
-        depth: int=30,
+        depth: int=60,
         seed=None
 ) -> list:
     '''
@@ -192,7 +192,7 @@ def fragment_indices_list(
 
 ########
 def main():
-    num_reads = 10000  # Number of reads to generate
+    num_reads = 100000  # Number of reads to generate
     read_length = 150  # Length of each read
     start_mean_quality = 40  # High quality at the start
     end_mean_quality = 30  # Lower quality towards the end

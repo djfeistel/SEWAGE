@@ -1,0 +1,28 @@
+generate workflow of updated SEWAGE script
+
+obligatory inputs for main script:
+    1. multifasta file, *fasta or file with pathways/to/fasta files
+    2. schema for primers (preloaded into the github and are manually created by my)
+    3. proportion of variants
+        i. one of three choices for equal, random, and dVOC
+    4. directory name for storeing final fastq files
+        i. name can include pathway if desired
+
+# work flow
+1. load genome fasta file. DONE?
+    i.fasta files can be a multifasta file or a list of pathways to those file
+        ia. * write into script to check if file is a pathway list or muliti fasta file
+2. create amplicons
+    i. this should already be written but needs to be updated for the simpler version of SEWAGE
+    ii. generate amplicon data is:
+        ii.a. choose a scheme of primers
+        ii.b check those primers in teh genomes
+        ii.c if at least one primer is not found, the amplicon is not generate
+        ii.d output is a fasta file and a log file for each genome
+            ii.d.1 log file is a TSV with primers name, scheme name, fasta defline, start, end, sequecne length 
+        ii.e all files are saved into a directory with extection .fasta or .log
+3. enrichment process
+    i. this step creates fastq files (paired end or long read) with the proporitons determined earlier 
+    ii. once the amplicons are created, proporitonal data is applied to the amplicons
+    iii. proporitonal data is determinedby one of three ways:
+        iii.a

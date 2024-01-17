@@ -1,20 +1,30 @@
 import os
 import sys
 import argparse
-import panda as pd
-
+import pandas as pd
+from datetime import datetime
+#remove after finsiehd 
+from fasta_funcitons_class_workshop import load_fasta_workflow_test
+'''
+Generate amplicions from a fasta dicitonary created in fasta_funcitons_class.py
+'''
 class GenerateAmplicons:
     
     def __init__(self,
                  fasta_dict: dict,
                  scheme: str,
+                 amplicon_fasta_name=None,
                  amplicon_storage_dir:str=None
                  ):
         
         self.fasta_dict = fasta_dict
         self.scheme = scheme
+        self.amplicon_fasta_name = amplicon_fasta_name
         self.amplicon_storage_dir = amplicon_storage_dir
         self.scheme_dir = "../schemes"
+        self.date_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.short_read_schemes = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vss1a", "vss2a", "vss2b"]
+        self.long_read_schemes = ["vsl1a"]
         # if not os.path.exists(self.fasta_pathway):
         #     raise FileNotFoundError(f"FASTA pathway '{self.fasta_pathway}' does not exist.")
         # if not os.path.isdir(self.fasta_pathway):
@@ -33,44 +43,46 @@ class GenerateAmplicons:
         # if not os.path.isdir(self.amplicon_storage_pathway):
         #     raise ValueError(f"Amplicon storage pathway '{self.amplicon_storage_pathway}' is not a directory.")
     
+
     def check_amplicon_storage_dir(self):
-        if self.amplicon_storage_dir is not None:
-            if not os.path.isdir(self.amplicon_storage_dir):
-                try:
-                    os.mkdir(self.amplicon_storage_dir)
-                except Exception as e:
-                    raise e
-            return self.amplicon_storage_dir
-        else:
-            amplicon_dir = "SEWAGE_amplicons"
-            if not os.path.isdir(amplicon_dir):
-                try:
-                    os.mkdir(amplicon_dir)
-                except Exception as e:
-                    raise e
-            return amplicon_dir
-
+        # Set directory name based on whether self.amplicon_storage_dir is None
+        current_datetime = self.date_time
+        dir_name = self.amplicon_storage_dir if self.amplicon_storage_dir is not None else f"SEWAGE_amplicons_{current_datetime}"
+        
+        try:
+            os.mkdir(dir_name)
+            print(f"Directory '{dir_name}' for amplicon stroage was created successfully.")
+        except FileExistsError:
+            raise FileExistsError(f"Directory '{dir_name}' for amplicon stroage already exists.")
+        except FileNotFoundError:
+            raise FileNotFoundError()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            raise e
+        self.amplicon_storage_dir = os.path.realpath(dir_name)
+        
+    @staticmethod
     def reverse_complimentary_sequence(sequence: str) -> str:
-            '''
-            return reverse complimentary sequence for the reverse primer
-            only used with ARTIC and VarSkip short reads primers is not 
-            needed for VarSkip long reads
-            '''
-            compliment_dict = {
-                "A": "T",
-                "T": "A",
-                "G": "C",
-                "C": "G",
-            }
-            complementary_sequence_list = [compliment_dict.get(nucl, nucl) for nucl in sequence]
-            return "".join(complementary_sequence_list[::-1])
+        '''
+        return reverse complimentary sequence for the reverse primer
+        only used with ARTIC and VarSkip short reads primers is not 
+        needed for VarSkip long reads
+        '''
+        compliment_dict = {
+            "A": "T",
+            "T": "A",
+            "G": "C",
+            "C": "G",
+        }
+        complementary_sequence_list = [compliment_dict.get(nucl, nucl) for nucl in sequence]
+        return "".join(complementary_sequence_list[::-1])
     
-    def scheme_dictionary(self) -> dict:
-
+    def scheme_primer_dictionary(self) -> dict:
+        
         scheme_pathway = os.path.join(self.scheme_dir, self.scheme + ".tsv")
         if "vsl1a" not in scheme_pathway:
             df = pd.read_csv(scheme_pathway, sep='\t', header=None)
-            df[3] = df[2].apply(reverse_complimentary_sequence)
+            df[3] = df[2].apply(GenerateAmplicons.reverse_complimentary_sequence)
             df.set_index(0, inplace=True)
             primer_scheme_dict = df[[1, 3]].apply(tuple, axis=1).to_dict()
             # primer_scheme_dict = Key: primer name; value: (forward primer, reverse primer)
@@ -80,12 +92,12 @@ class GenerateAmplicons:
             df.set_index(0, inplace=True)
             primer_scheme_dict = df[1].to_dict()
             return primer_scheme_dict
-        
-    def primer_paired_end_indices(
-            self,
+
+    @staticmethod    
+    def primer_short_read_index(
             reference_sequence: str, 
             forward_primer: str, 
-            reverse_compliment_primer: str
+            reverse_primer: str
             ) -> list:
             '''
             find exact match to forward and reverse primer sequences
@@ -94,103 +106,99 @@ class GenerateAmplicons:
                 the ending index of the reverse primer
             return a list of each index as an element
             '''
-            forward_index = reference_sequence.find(forward_primer)
-            reverse_index_start = reference_sequence.find(reverse_compliment_primer)
-            if any(x == -1 for x in [forward_index, reverse_index_start]):
+            forward_index_start = reference_sequence.find(forward_primer)
+            reverse_index_end = reference_sequence.find(reverse_primer)
+            if any(x == -1 for x in [forward_index_start, reverse_index_end]):
                 return False
-            reverse_index_end = reverse_index_start + len(reverse_compliment_primer)
-            return [forward_index, reverse_index_end]
+            # need to add length of primer for end of primer index
+            reverse_index_end = reverse_index_end + len(reverse_primer)
+            return [forward_index_start, reverse_index_end]
     
-    def primer_long_read_indices(
-            self,
+    @staticmethod
+    def primer_long_read_index(
             reference_sequence: str, 
-            forward_primer: str
+            forward_primer: str,
+            reverse_primer: str
+
             ) -> list:
-            start = reference_sequence.find(forward_primer)
-            if start == -1:
+            forward_index_start = reference_sequence.find(forward_primer)
+            # R2 primer for Varskip does not need to be reverse complimentary
+            reverse_index_end = reference_sequence.find(reverse_primer)
+            if any(x == -1 for x in [forward_index_start, reverse_primer]):
                 return False
-            else:
-                end = start + len(start)
-                return [start, end]
-    
-    def create_amplicon_dict_for_fasta_files(self,
-                                            ref_seq_dict: dict,
-                                            primer_scheme_dict: dict) -> dict:
-        '''
-        requires a for loop for calling reference_sequence dict key : values from read_referecne_fasta_list()
-        '''
-        short_read_schemes = [
-            "V1", "V2", "V3", "V4", "V4.1", 
-            "V5.3.2", "vss1a", "vss2a", "vss2b"
-            ]
-        long_read_schemes = ["vsl1a"]
-        amplicon_dict = {}
-        #key==primer name; value==amplicon or None
-        for reference_sequence_defline, reference_sequence_values in ref_seq_dict.items():
-            for primer_name, primer_seqs in primer_scheme_dict.items():
-                    
-                if type(primer_seqs) == tuple:
-                    forward_primer = primer_seqs[0]
-                    reverse_primer = primer_seqs[1]
-                    index_amplicon_list = primer_paired_end_indices(reference_sequence=reference_sequence_values, forward_primer=forward_primer, reverse_primer=reverse_primer
-                    )
-                else:
-                    index_amplicon_list = primer_long_read_indices(reference_sequence=primer_seqs, forward_primer=primer_seqs)
+            # need to add length of primer for end of primer index
+            reverse_index_end = reverse_index_end + len(reverse_primer)
+            return [forward_index_start, reverse_index_end]
 
-'''             STOPED HERE             '''
-                
-                '''amplicon dict is 
-                amplicon_dict[reference_sequence_name] = {defline: sequence}'''
+    def amplicon_dataframe(
+            self, 
+            genome_sequence_dict: dict, 
+            primer_scheme_dict: dict
+    ) -> pd.DataFrame:
+        '''find amplicions and return a pandas df'''
+        if self.scheme in self.short_read_schemes:
+            primer_indices_function = GenerateAmplicons.primer_short_read_index
+        elif self.scheme in self.long_read_schemes:
+            primer_indices_function = GenerateAmplicons.primer_long_read_index
+        else:
+            raise ValueError("Unknown scheme")
+        
+        amplicon_dict = {
+            "reference_defline": [],
+            "primer_scheme": [],
+            "primer_name": [],
+            "start": [],
+            "end": [],
+            "length_bp": [],
+            "amplicon_sequence": []
+        }
+            
+        for reference_defline, reference_sequence in genome_sequence_dict.items():
+            for primer_name, primer_sequences in primer_scheme_dict.items():
+                forward_primer = primer_sequences[0]
+                reverse_primer = primer_sequences[1]
 
+                index_amplicon_list = primer_indices_function(reference_sequence=reference_sequence, 
+                                                      forward_primer=forward_primer, 
+                                                      reverse_primer=reverse_primer)
                 if not index_amplicon_list:
-                    defline = "~~~".join([primer_name, reference_sequence_defline, scheme_profile])
-                    if reference_fasta_basename in amplicon_dict:
-                        amplicon_dict[reference_fasta_basename][defline] = None
-                    else:
-                        amplicon_dict[reference_fasta_basename] = {defline: None}
+                    start, end = None, None
+                    amplicion = "No Amplification"
                 else:
-                    amplicion_seq = str(reference_sequence_seq[index_amplicon_list[0]:index_amplicon_list[1]])
-                    amplicon_length = str(len(amplicion_seq)) + "bp"
-                    defline = "~~~".join([primer_name, reference_sequence_defline, scheme_profile, amplicon_length])
-                    if reference_fasta_basename in amplicon_dict:
-                        amplicon_dict[reference_fasta_basename][defline] = [amplicion_seq, index_amplicon_list]
-                    else:
-                        amplicon_dict[reference_fasta_basename] = {defline: [amplicion_seq, index_amplicon_list]}
-        return amplicon_dict
+                    start, end = index_amplicon_list
+                    amplicion = reference_sequence[start:end]
+                
+                amplicon_dict["reference_defline"].append(reference_defline)
+                amplicon_dict["primer_scheme"].append(self.scheme)
+                amplicon_dict["primer_name"].append(primer_name)
+                amplicon_dict["start"].append(start)
+                amplicon_dict["end"].append(end)
+                amplicon_dict["length_bp"].append(len(amplicion))
+                amplicon_dict["amplicon_sequence"].append(amplicion)
+        
+        return pd.DataFrame(amplicon_dict)
     
-    def write_amplicion_fasta_files(self, amplicon_storage_dir_pathway: str, amplicon_dict: dict) -> None:
+    def write_fasta(self, df):
+        '''write fasta file with amplicions'''
+        if self.amplicon_fasta_name is None:
+            file_name = f"SEWAGE_amplicon_{self.date_time}.fasta"
+        else:
+            file_name = self.amplicon_fasta_name
+        # Create the defline using vectorized string concatenation
+        df = df[df['amplicon_sequence'] != "No Amplification"]
+        deflines = ('>' + df['reference_defline'].astype(str) + '~~~' +
+                    df['primer_scheme'].astype(str) + '~~~' +
+                    df['primer_name'].astype(str) + '~~~' +
+                    df['start'].astype(str) + '~~~' +
+                    df['end'].astype(str) + '~~~' +
+                    df['length_bp'].astype(str) + 'bp')
 
-        if self.scheme and not self.user:
-            scheme_profile = self.scheme
-        elif self.user and not self.scheme:
-            scheme_profile = self.user
+        # Concatenate deflines and sequences with newline characters
+        fasta_strings = deflines + '\n' + df['amplicon_sequence'] + '\n'
 
-        for ref_name, seq_dict in amplicon_dict.items():
-
-            output_fasta = os.path.join(amplicon_storage_dir_pathway, ref_name[0] + "_amplicons.fasta")
-            output_log = os.path.join(amplicon_storage_dir_pathway, ref_name[0] + "_amplicons.log")
-            
-            with open(output_fasta, 'w') as wf_amps, open(output_log, 'w') as wf_logs:
-            
-                for defline, amplicon_items_list in seq_dict.items():
-                    primer_name = defline.split('~~~')[0]
-
-                    if amplicon_items_list is None:
-                        wf_logs.write(f"{primer_name}\t{scheme_profile}\t{ref_name[0]}\tNo Amplification\n")
-
-                    elif amplicon_items_list is not None:
-                        amplicon_sequence, position_list = amplicon_items_list
-                        start_pos, end_pos = position_list
-
-                        line = '\t'.join([primer_name, scheme_profile, ref_name[0], str(start_pos), str(end_pos), str(len(amplicon_sequence))])
-                        wf_logs.write(f"{line}\n")
-
-                        wf_amps.write(f">{defline}\n")
-                        while amplicon_sequence:
-                            chunk = amplicon_sequence[:100]
-                            amplicon_sequence = amplicon_sequence[100:]
-                            wf_amps.write(f"{chunk}\n")
-        return None
+        # Write all lines to the file at once
+        with open(os.path.join(self.amplicon_storage_dir, file_name), 'w') as f:
+            f.write('\n'.join(fasta_strings))
 
 def opts():
     # Create the main parser
@@ -238,28 +246,20 @@ def opts():
     args = amplicon_parser.parse_args()    
     return args
 
-def GenerateAmplicon_MainWorkflow(fasta, scheme, user, sewage_home_dir, output, pathway):
-    '''Main workflow for creating amplicons'''
-    '''removed the opts as the main_argsparser is used'''
+def generate_amplicon_workflow_test(fasta_input):
 
-    sewage_amplicon = GenerateAmplicons(fasta, 
-                                        scheme,
-                                        user, 
-                                        sewage_home_dir,
-                                        output, 
-                                        pathway)
-    
-    fasta_pathway_list = sewage_amplicon.fasta_reference_pathway_list()
-    reference_sequence_dict = sewage_amplicon.read_referecne_pathway_fasta_list(fasta_pathway_list)
-    primer_scheme_dict = sewage_amplicon.read_primer_scheme_file()
-    amplicon_dict = sewage_amplicon.create_amplicon_dict_for_fasta_files(ref_seq_dict=reference_sequence_dict,
-                                                                         primer_scheme_dict=primer_scheme_dict)
-    amplicon_storage_dir_pathway = sewage_amplicon.make_amplicon_storage_dir()
-    sewage_amplicon.write_amplicion_fasta_files(amplicon_storage_dir_pathway=amplicon_storage_dir_pathway,
-                                                amplicon_dict=amplicon_dict)
-    
-    print(f"\nSEWAGE has finished creating amplicon fasta files.", file=sys.stderr)
-    print(f"Data is stored in {amplicon_storage_dir_pathway}.\n", file=sys.stderr)
-    print(f"Use 'SEWAGE enrich' command with any set of amplicon fasta files to generate mix proporitons.\n")
+    fasta_dict = load_fasta_workflow_test(fasta_input)
+    amplicon_generator = GenerateAmplicons(fasta_dict=fasta_dict, scheme="V5.3.2")
+    #amplicon_generator.check_amplicon_storage_dir()
+    primer_scheme_dict = amplicon_generator.scheme_primer_dictionary()
+    df_amplicon = amplicon_generator.amplicon_dataframe(
+        genome_sequence_dict=fasta_dict,
+        primer_scheme_dict=primer_scheme_dict
+        )
+    #amplicon_generator.write_fasta(df=df_amplicon)
+    #for whatever reason i need to filter No Amplified amplicons here
+    df_amplicon = df_amplicon[df_amplicon['amplicon_sequence'] != "No Amplification"]
+    return df_amplicon
 
-    return
+if __name__ == "__main__":
+    generate_amplicon_workflow_test()
