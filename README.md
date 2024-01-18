@@ -89,7 +89,7 @@ From the code above, results will be stored in a directory called ```SEWAGE_{YYY
 |SEWAGE_R1.fastq|Forward reads|
 |SEWAGE_R2.fastq|Reverse reads|
 
-With the exception Reference_genomes.fasta, Proportion_Read_metadata.tsv, and parameters.txt files,Files listed above are named with default settings and can be modified using the ```--fastq_name``` and ```--amplicon_fasta_name``` flags.
+With the exception **Reference_genomes.fasta**, **Proportion_Read_metadata.tsv**, and **parameters.txt** files,Files listed above are named with default settings and can be modified using the ```--fastq_name``` and ```--amplicon_fasta_name``` flags.
 
 ### Comments about creating amplicons:
 Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one primer is missing, the amplicion will not be amplified for that primer and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify by stating the primer name followed by "No Amplification".
