@@ -77,18 +77,19 @@ Fast Start: SEWAGE -i <multi.fasta> -s <scheme>
 
 Assuming Minimal Usage ```SEWAGE -i <multi.fasta> -s <scheme>```
 
-From the code above, results will be stored in a directory called ```SEWAGE_{YYYYMMDD}_{HHMMSS}``` in the current working directory. You can change the name of teh storage directory by using the ```--storage_dir``` flag. Several files will be created:
+From the code above, results will be stored in a directory called ```SEWAGE_{YYYYMMDD}_{HHMMSS}``` in the current working directory. You can change the name of the storage directory by using the ```--storage_dir``` flag. Several files will be created:
 
 |File Name|Description|
 |:----|:----|
 |Reference_genomes.fasta|Fasta file with reference genomes|
-|parameters.txt|Parameters used when running ```SEWAGE```|
 |Proportion_Read_metadata.tsv|Proportional data used to calculate reads|
+|parameters.txt|Parameters used when running ```SEWAGE```|
 |SEWAGE_amplicons.fasta|Amplicons detected for all reference genomes|
 |SEWAGE_amplicons_metadata.tsv|Amplicon meta data for amplified and non-amplified primers|
 |SEWAGE_R1.fastq|Forward reads|
 |SEWAGE_R2.fastq|Reverse reads|
 
+With the exception Reference_genomes.fasta, Proportion_Read_metadata.tsv, and parameters.txt files,Files listed above are named with default settings and can be modified using the ```--fastq_name``` and ```--amplicon_fasta_name``` flags.
 
 ### Comments about creating amplicons:
 Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one primer is missing, the amplicion will not be amplified for that primer and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify by stating the primer name followed by "No Amplification".
