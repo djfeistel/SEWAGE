@@ -40,7 +40,7 @@ Input and Scheme Parameters:
 Amplicon Parameters:
 
   -afn STR, --amplicon_fasta_name STR
-                        File name for amplicon data frame [default="SEWAGE_amplicons.fasta"]
+                        File name for amplicon data frame and fasta file [default="SEWAGE_amplicons.fasta"]
   -sd STR, --storage_dir STR
                         Directory name for amplicon data storage [default="SEWAGE_[data_time]"]
 
