@@ -40,16 +40,17 @@ Input and Scheme Parameters:
 Amplicon Parameters:
 
   -afn STR, --amplicon_fasta_name STR
-                        File name for amplicon data frame and fasta file [default="SEWAGE_amplicons.fasta"]
+                        File name for amplicon data frame and fasta file [default="SEWAGE_amplicons"]
   -sd STR, --storage_dir STR
                         Directory name for amplicon data storage [default="SEWAGE_[data_time]"]
 
 Proportion options:
 
   -p {r,e,d}, --proportion_model {r,e,d}
-                        Generate equal (e), random (r), or dominate (d) proportions of reads [default: d]
+                        Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads
+                        [default: d]
   -dg STR, --dVOC_genome STR
-                        Name of dVOC. NOTE name must match the defline in the reference fasta file
+                        Name of dVOC. NOTE: name of dVOC must match the defline of the reference fasta file
   -dp FLOAT, --dVOC_proporiton FLOAT
                         Proportion of dDOV [default: 0.8]
   -ps INT, --proportion_seed INT
@@ -60,12 +61,13 @@ Read generator options:
   -q STR, --fastq_name STR
                         Name of fastq files for F/R reads [default: SEWAGE_{R1/R2}.fastq]
   -rl INT, --read_length INT
-                        Read length in bp (value cannot exceed amplicon length or will fail) [default: 250]
+                        Read length in bp (value should not exceed amplicon length or will workflow fail)
+                        [default: 250]
   -cd INT, --coverage_depth INT
                         Total sequence depth coverage for each fastq file [default: 500]
   -mr INT, --max_reads INT
-                        Total number of reads for each fastq file [default: None]. If set, --coverage_depth is
-                        ignored.
+                        Total number of reads for each fastq file [default: None]. NOTE: If set,
+                        --coverage_depth is ignored.
   -rs INT, --read_seed INT
                         Random seed number for reproducing reads [default: 13]
 
