@@ -5,7 +5,7 @@ def sewage_opts():
     parser = argparse.ArgumentParser(
         prog="SEWAGE",
         description=f"\nSynthetically Engineered Wastewater-like sequence data for Assessing Genomic and Environmental populations\n",
-        epilog=f"Fast Start: SEWAGE -i [fasta] -s [scheme]"
+        epilog=f"Fast Start: SEWAGE -i <multi.fasta> -s <scheme>"
     )
     '''input and output'''
     required_pathway = parser.add_argument_group("Input and Scheme Parameters", "Required flags")

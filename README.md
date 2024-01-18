@@ -4,38 +4,20 @@
 
 SEWAGE is a tool for generating reproducible sequence data that represents a heterogeneous population of closely related species at various proportions. Specifically, it was designed to mirror sequence data that resembles a mixed SARS-CoV-2 population derived from a wastewater sample by using targeted-enrichment or tiled-amplicon PCR approaches.
 
-SEWAGE currently offers two main functionalities for producing wastewater-like sequence data: 
-1. The ability to produce amplicons that mimic tiled-amplicon sequencing approaches for each input genome using a set of primers.
-2. Create Illumina short-read data sets from those amplicions that mimic a heterogeneous populations of closely related species at various proportions.
+SEWAGE offers ability Produces amplicons that mimic tiled-amplicon sequencing approaches for each input genome using a set of primers and create short-read or long-read data sets (i.e.,fastq files) from those amplicions that mimic a heterogeneous populations of closely related species at various proportions for producing wastewater-like sequence data.
 
-### Comments about SEWAGE:
-1. SEWAGE currently offers SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions in the ```scheme/``` directory and can be accessed using the ```-s/--scheme``` flag when using ```SEWAGE amplicon```.
-2. Users who want to use there own primer scheme can do so using the ```-u/--user``` flag when using ```SEWAGE amplicon```.  The primer scheme file must be a tab seperate file with three columns with the forward sequence, reverse sequence, and primer name in the first, second, and third column, respectively. The reverse primer supplied in the user file will be converted into the reverse complimentary e.g. ATGC --> GCAT
-3. As of now, SEWAGE can only create Illumia short-reads due to its reliability on the tool ART<sup>1</sup>.  I am actively working on creating an algorithm for generating short and long read data. Updates will be made when available.
+SEWAGE currently offers SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions.
 
-## Installing dependencies via conda
-SEWAGE is written in Python 3 version 3.8.3 and the only dependencies are tqdm<sup>2</sup>, NumPy<sup>3</sup> and ART<sup>1</sup>. However, ART will eventually be replaced in future versions of SEWAGE with an internal algorithm for simulating long and short reads.  
-
-*Note: It is not necessary to use conda as long as you have ***tqdm*** and ***NumPY*** installed and ***art_illuina*** in your $PATH*
+## Dependencies
 ```
-conda create -n SEWAGE_env python==3.8.3 --yes
-conda activate SEWAGE_env
-pip install tqdm numpy==1.21.0
-conda install -c bioconda art --yes
-```
-Once you have installed the conda environment you can add SEWAGE as a symlink to your bin  
-```
-ln -s <pathway/to/SEWAGE> <pathway/to/bin>
+numpy
+pandas
 ```
 
-## Generate amplicons from a set of reference genomes
-The first step is to generate amplicons from reference genomes of any size.  Reference genomes must be store as fasta files and each reference fasta file must only include a single reference genome. The reference fasta files should be stored in a directory together with the extention ".fasta", ".fa", or ".fsa".  Other files may be stored in the directory with the reference files.
-
-There are two required flags: The ```--fasta``` flag is used to tell SEWAGE where the fasta files are stored and the ```--scheme``` flag sets the primers to use (stored in the ```scheme``` directory). SEWAGE currently offers only SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions. However, we are actively working on allowing users to supply their own primer sets to use with other species. The optional flags ```--output``` and ```--pathway``` set the name of the output (default="SEWAGE_amplicons") and the pathway for those amplicons to be stored (default='.'), respectivly.
-
+## Usage
 Minimal Usage:  
 ```
-SEWAGE amplicon -f <pathway/to/fasta-files> -s <scheme>
+SEWAGE -i <multi.fasta> -s <scheme>
 ```
 Help Menu:
 ```
