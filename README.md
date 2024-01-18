@@ -21,19 +21,55 @@ SEWAGE -i <multi.fasta> -s <scheme>
 ```
 Help Menu:
 ```
-usage: SEWAGE amplicon [-h] -f FASTA -s SCHEME [-o STR] [-p PATHWAY]
+usage: SEWAGE [-h] -i STR -s STR [-afn STR] [-sd STR] [-p {r,e,d}] [-dg STR] [-dp FLOAT] [-ps INT] [-q STR]
+              [-rl INT] [-cd INT] [-mr INT] [-rs INT]
 
-optional arguments:
+Synthetically Engineered Wastewater-like sequence data for Assessing Genomic and Environmental populations
+
+options:
   -h, --help            show this help message and exit
-  -f FASTA, --fasta FASTA
-                        Single or multi-fasta reference. Multi-fasta files should be unique genomes for each defline/sequence. Output
-                        will produce "${defline}_amplicon.fasta" files for each genome
-  -s SCHEME, --scheme SCHEME
-                        Primer scheme: (Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"], VarSkip = ["vsl1a", "vss1a", "vss2a",
-                        "vss2b"])
-  -o STR, --output STR  Output Prefix name for fasta file [default="SEWAGE_amplicons.fasta"]
-  -p PATHWAY, --pathway PATHWAY
-                        Pathway to storgage directory [default="."]
+
+Input and Scheme Parameters:
+  Required flags
+
+  -i STR, --infasta STR
+                        Multifasta file or single column list of pathways to fasta files
+  -s STR, --scheme STR  Available primer scheme: Artic = ["V1", "V2", "V3", "V4", "V4.1",    "V5.3.2"] VarSkip:
+                        Long read = ["vsl1a"]; Short-read = ["vss1a", "vss2a", "vss2b"])
+
+Amplicon Parameters:
+
+  -afn STR, --amplicon_fasta_name STR
+                        File name for amplicon data frame [default="SEWAGE_amplicons.fasta"]
+  -sd STR, --storage_dir STR
+                        Directory name for amplicon data storage [default="SEWAGE_[data_time]"]
+
+Proportion options:
+
+  -p {r,e,d}, --proportion_model {r,e,d}
+                        Generate equal (e), random (r), or dominate (d) proportions of reads [default: d]
+  -dg STR, --dVOC_genome STR
+                        Name of dVOC. NOTE name must match the defline in the reference fasta file
+  -dp FLOAT, --dVOC_proporiton FLOAT
+                        Proportion of dDOV [default: 0.8]
+  -ps INT, --proportion_seed INT
+                        Random seed number for reproducing proportions [default: 13]
+
+Read generator options:
+
+  -q STR, --fastq_name STR
+                        Name of fastq files for F/R reads [default: SEWAGE_{R1/R2}.fastq]
+  -rl INT, --read_length INT
+                        Read length in bp (value cannot exceed amplicon length or will fail) [default: 250]
+  -cd INT, --coverage_depth INT
+                        Total sequence depth coverage for each fastq file [default: 500]
+  -mr INT, --max_reads INT
+                        Total number of reads for each fastq file [default: None]. If set, --coverage_depth is
+                        ignored.
+  -rs INT, --read_seed INT
+                        Random seed number for reproducing reads [default: 13]
+
+Fast Start: SEWAGE -i <multi.fasta> -s <scheme>
 ```
 ### SEWAGE Amplicon Output:
 
