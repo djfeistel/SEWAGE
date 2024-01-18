@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 import pandas as pd
 from datetime import datetime
@@ -47,11 +46,11 @@ class GenerateAmplicons:
     def check_amplicon_storage_dir(self):
         # Set directory name based on whether self.amplicon_storage_dir is None
         current_datetime = self.date_time
-        dir_name = self.amplicon_storage_dir if self.amplicon_storage_dir is not None else f"SEWAGE_amplicons_{current_datetime}"
+        dir_name = self.amplicon_storage_dir if self.amplicon_storage_dir is not None else f"SEWAGE_{current_datetime}"
         
         try:
             os.mkdir(dir_name)
-            print(f"Directory '{dir_name}' for amplicon stroage was created successfully.")
+            #print(f"Directory '{dir_name}' for amplicon stroage was created successfully.")
         except FileExistsError:
             raise FileExistsError(f"Directory '{dir_name}' for amplicon stroage already exists.")
         except FileNotFoundError:
@@ -60,6 +59,7 @@ class GenerateAmplicons:
             print(f"An error occurred: {e}")
             raise e
         self.amplicon_storage_dir = os.path.realpath(dir_name)
+        return self.amplicon_storage_dir
         
     @staticmethod
     def reverse_complimentary_sequence(sequence: str) -> str:
@@ -180,10 +180,17 @@ class GenerateAmplicons:
     
     def write_fasta(self, df):
         '''write fasta file with amplicions'''
+
+        # chcek if none
         if self.amplicon_fasta_name is None:
-            file_name = f"SEWAGE_amplicon_{self.date_time}.fasta"
+            file_name = f"SEWAGE_amplicons.fasta"
         else:
             file_name = self.amplicon_fasta_name
+        
+        #save original amplicon file
+        output_tsv = file_name.split('.')[0] + ".tsv"
+        df.to_csv(os.path.join(self.amplicon_storage_dir, output_tsv), sep='\t', index=False)
+
         # Create the defline using vectorized string concatenation
         df = df[df['amplicon_sequence'] != "No Amplification"]
         deflines = ('>' + df['reference_defline'].astype(str) + '~~~' +
@@ -199,52 +206,6 @@ class GenerateAmplicons:
         # Write all lines to the file at once
         with open(os.path.join(self.amplicon_storage_dir, file_name), 'w') as f:
             f.write('\n'.join(fasta_strings))
-
-def opts():
-    # Create the main parser
-    amplicon_parser = argparse.ArgumentParser(prog="SEWAGE amplicon",
-                                     description=f"SEWAGE NEEDS A NAME\n",
-                                     add_help=True,
-                                     epilog="minimal usage: SEWAGE amplicon -f <input> -s <scheme>")
-
-
-    amplicon_parser.add_argument('-f', '--fasta', 
-                                 help='Pathway to directory with single reference genome fasta files [.fasta, .fsa, .fa]', 
-                                 required=True,
-                                 type=str,
-                                 dest='fasta')
-    amplicon_parser.add_argument('-s', '--scheme', 
-                                 help='Primer scheme: (Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"], \
-                                    VarSkip = ["vsl1a", "vss1a", "vss2a", "vss2b"]) [default=V5.3.2]', 
-                                 required=False, 
-                                 type=str,
-                                 choices=["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vsl1a", "vss1a", "vss2a", "vss2b"],
-                                 metavar='SCHEME',
-                                 dest='scheme',
-                                 default=None) #make sure that code reflect when None is reached it does not work
-    amplicon_parser.add_argument('-u', '--user_scheme', 
-                                 help='User defined primer scheme TSV file with three columns with: Forward_seq, Reverse_seq, Primer_Name', 
-                                 required=False, 
-                                 type=str,
-                                 metavar='FILE',
-                                 dest='user',
-                                 default=None) #change this later
-    amplicon_parser.add_argument('-o', '--output', 
-                                 help='Output directory name for amplicon [default="SEWAGE_amplicons"]', 
-                                 required=False,
-                                 default=None,
-                                 type=str,
-                                 metavar='STR',
-                                 dest='output')
-    amplicon_parser.add_argument('-p', '--pathway', 
-                                 help='Pathway to storgage directory [default="."]',
-                                 required=False, 
-                                 type=str,
-                                 metavar='PATHWAY',
-                                 dest='pathway',
-                                 default='.')
-    args = amplicon_parser.parse_args()    
-    return args
 
 def generate_amplicon_workflow_test(fasta_input):
 

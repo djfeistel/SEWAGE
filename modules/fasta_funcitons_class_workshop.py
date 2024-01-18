@@ -1,4 +1,3 @@
-import glob
 import os 
 import sys
 '''
@@ -18,7 +17,6 @@ class LoadFasta():
     ):
         self.fasta = fasta
         
-    
     def check_input_for_fasta_or_pathways(self):
         '''open file (fasta or pathway list) and test if first line if fasta defline or pathway file'''
         with open(self.fasta, 'r') as fh:
