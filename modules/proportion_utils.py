@@ -1,8 +1,6 @@
 import numpy as np
 import random
 import sys
-#from fasta_funcitons_class_workshop import load_fasta_workflow_test
-
 
 '''
 calculate various proportions values for reference genomes for determining relative abundance in fastq files
@@ -41,7 +39,7 @@ class GenomeProporitons():
         # normalize proportions 
         normalized_proportions = random_proportions / np.sum(random_proportions)
         # index proporions less than 0.01
-        idx = normalized_proportions < 0.01
+        idx = normalized_proportions <= 0.01
         # add 0.01 to those values < 0.01
         normalized_proportions[idx] += 0.01
         # renormalize proportions
@@ -127,14 +125,14 @@ class GenomeProporitons():
             other_genomes = [genome for genome in reference_genomes_keys if genome != self.dVOC_genome]
 
             # Generate random proportions for other genomes
-            random_proportions = [random.uniform(0.001, 1) for _ in other_genomes]
+            random_proportions = [random.uniform(0.01, 1) for _ in other_genomes]
             scaling_factor = remaining_sum / sum(random_proportions)
             scaled_proportions = [prop * scaling_factor for prop in random_proportions]
 
             # Ensure no proportion is less than 0.001
             for i in range(len(scaled_proportions)):
-                if scaled_proportions[i] < 0.001:
-                    scaled_proportions[i] += 0.001
+                if scaled_proportions[i] <= 0.01:
+                    scaled_proportions[i] += 0.01
 
             # Update the proportions dictionary with scaled values for other genomes
             for genome, prop in zip(other_genomes, scaled_proportions):
@@ -155,7 +153,7 @@ class GenomeProporitons():
         reference_genomes_keys = list(self.reference_fasta_dict.keys())
         np.random.shuffle(reference_genomes_keys)
         
-        random_list = [random.uniform(0.001, 1) for _ in range(len(reference_genomes_keys))]
+        random_list = [random.uniform(0.01, 1) for _ in range(len(reference_genomes_keys))]
         random_index = random.randint(0, len(random_list) - 1)
         random_list[random_index] = self.dVOC_proporiton
         total_sum = sum(random_list)
@@ -165,8 +163,8 @@ class GenomeProporitons():
             if i != random_index:
                 random_list[i] *= scaling_factor
             for i in range(len(random_list)):
-                if random_list[i] < 0.001:
-                    random_list[i] += 0.001
+                if random_list[i] <= 0.01:
+                    random_list[i] += 0.01
         total_sum = sum(random_list)
         random_list = [val / total_sum for val in random_list]
         random.shuffle(random_list)
@@ -174,13 +172,3 @@ class GenomeProporitons():
 
         return proportions
         
-
-def proportion_workflow_test():
-    reference_fasta_file = load_fasta_workflow_test(sys.argv[1])
-    genome_props = GenomeProporitons(reference_fasta_dict=reference_fasta_file)
-    dVOC_props = genome_props.dominantVariantProportions()
-    print(dVOC_props)
-    
-
-if __name__ == "__main__":
-    proportion_workflow_test()

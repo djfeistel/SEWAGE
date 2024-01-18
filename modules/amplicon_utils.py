@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+import textwrap
 from datetime import datetime
 #remove after finsiehd 
 #from fasta_funcitons_class_workshop import load_fasta_workflow_test
@@ -187,20 +188,20 @@ class GenerateAmplicons:
 
         #save original amplicon file
         df.to_csv(os.path.join(self.amplicon_storage_dir, metadata_file_name), sep='\t', index=False)
-
-        # Create the defline using vectorized string concatenation
+        
+        # drop rows that did not amplify before writing amplicon fasta file
         df = df.dropna(subset=['start', 'end', 'length_bp'], how='all')
-        deflines = ('>' + df['reference_defline'].astype(str) + '~~~' +
-                    df['primer_scheme'].astype(str) + '~~~' +
-                    df['primer_name'].astype(str) + '~~~' +
-                    df['start'].astype(str) + '~~~' +
-                    df['end'].astype(str) + '~~~' +
-                    df['length_bp'].astype(str) + 'bp')
-
-        # Concatenate deflines and sequences with newline characters
-        fasta_strings = deflines + '\n' + df['amplicon_sequence'] + '\n'
-
-        # Write all lines to the file at once
+        
+        # Open file for writing
         with open(os.path.join(self.amplicon_storage_dir, fasta_file_name), 'w') as f:
-            f.write('\n'.join(fasta_strings))
+            for index, row in df.iterrows():
+                defline = f">{row['reference_defline']}~~~{row['primer_scheme']}~~~{row['primer_name']}~~~{row['start']}~~~{row['end']}~~~{row['length_bp']}bp"
+                f.write(defline + '\n')
+                
+                # Wrap the sequence and write it
+                sequence = row['amplicon_sequence']
+                wrapped_sequence = textwrap.wrap(sequence, width=60)
+                for line in wrapped_sequence:
+                    f.write(line + '\n')
+
         return df

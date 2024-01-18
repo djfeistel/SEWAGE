@@ -1,5 +1,5 @@
 import os 
-import sys
+import textwrap
 '''
 gather and load reference genomes and create dictionary with defline as key and sequence as value
 note: increasing the number of genomes or geneoms with longer sequeces may make this load slower
@@ -84,23 +84,10 @@ class LoadFasta():
                         fasta_dict[current_defline] = current_sequence
             return fasta_dict
 
-def load_fasta_workflow_test(fasta_raw: str) -> dict:
-    '''
-    workflow for creating dictionary with genomes
-        key: genome
-        value: sequence
-    '''
-
-    fasta_data = LoadFasta(fasta=fasta_raw)
-
-    if fasta_data.check_input_for_fasta_or_pathways():
-        reference_fasta_dict = fasta_data.read_multifasta_into_dict()
-        return reference_fasta_dict
-    else:
-        pathway_list = fasta_data.create_list_of_pathways()
-        reference_fasta_dict = fasta_data.read_fasta_pathways_into_dict(pathway_list)
-        return reference_fasta_dict
-
-if __name__ == "__main__":
-    # use this to run work flow and test data 
-    load_fasta_workflow_test(infasta=sys.argv[1])
+def write_reference_fasta(fasta_dict, storage_dir):
+    with open(os.path.join(storage_dir, "Reference_genomes.fasta"), "w") as wf:
+        for genome, sequence in fasta_dict.items():
+            wf.write(f">{genome}\n")
+            wrapped_sequence = textwrap.wrap(sequence, width=60)
+            for line in wrapped_sequence:
+                wf.write(f"{line}\n")

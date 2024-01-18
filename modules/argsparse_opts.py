@@ -5,7 +5,7 @@ def sewage_opts():
     parser = argparse.ArgumentParser(
         prog="SEWAGE",
         description=f"\nSynthetically Engineered Wastewater-like sequence data for Assessing Genomic and Environmental populations\n",
-        epilog=f"hello"
+        epilog=f"Fast Start: SEWAGE -i [fasta] -s [scheme]"
     )
     '''input and output'''
     required_pathway = parser.add_argument_group("Input and Scheme Parameters", "Required flags")
@@ -103,11 +103,20 @@ def sewage_opts():
     )
     read_options.add_argument(
         "-cd", "--coverage_depth", 
-        help="Total sequence depth coverage for each fastq file [default: 60]", 
+        help="Total sequence depth coverage for each fastq file [default: 500]", 
         metavar='INT',
-        default=60,
+        default=500,
         type=int,
         dest='coverage_depth'
+    )
+    # self.max_reads
+    read_options.add_argument(
+        "-mr", "--max_reads", 
+        help="Total number of reads for each fastq file [default: None]. If set, --coverage_depth is ignored.", 
+        metavar='INT',
+        default=None,
+        type=int,
+        dest='max_reads'
     )
     read_options.add_argument(
         "-rs", "--read_seed", 
@@ -117,16 +126,12 @@ def sewage_opts():
         type=int,
         dest='read_seed'
     )
-
     args = parser.parse_args()
     return args
 
-def write_args(args, storage_dir):
+def write_parameters_log(args, storage_dir):
     args_dict = vars(args)
     args_str = '\n'.join(f'{key}: {value}' for key, value in args_dict.items())
     log_file_path = os.path.join(storage_dir, 'parameters.txt')
     with open(log_file_path, 'w') as file:
         file.write(args_str + '\n')
-
-    
-    

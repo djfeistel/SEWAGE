@@ -1,3 +1,4 @@
+import os
 from modules import fasta_utils
 from modules import amplicon_utils
 from modules import proportion_utils
@@ -7,7 +8,7 @@ from modules import argsparse_opts
 def main():
     
     args = argsparse_opts.sewage_opts()
-    
+    args.infasta = os.path.realpath(args.infasta)
     infasta = args.infasta
     scheme = args.scheme
     amplicon_fasta_name = args.amplicon_fasta_name
@@ -19,6 +20,7 @@ def main():
     fastq_name = args.fastq_name
     read_length = args.read_length
     coverage_depth = args.coverage_depth
+    max_reads =args.max_reads
     read_seed = args.read_seed
 
     # load fasta data
@@ -39,6 +41,8 @@ def main():
     )
     #use storage_dir as input to read_generator
     storage_dir = amplicon_generator.check_amplicon_storage_dir()
+    fasta_utils.write_reference_fasta(fasta_dict=reference_fasta_dict, storage_dir=storage_dir)
+    #write parameters log
     argsparse_opts.write_parameters_log(args, storage_dir)
     
     primer_scheme_dict = amplicon_generator.scheme_primer_dictionary()
@@ -48,10 +52,6 @@ def main():
         )
     
     df_amplicon = amplicon_generator.write_fasta(df=df_amplicon)
-    #for whatever reason i need to filter No Amplified amplicons here
-    #df_amplicon = df_amplicon[df_amplicon['amplicon_sequence'] != "No Amplification"]
-    #df_amplicon = df_amplicon.dropna(subset=['start', 'end', 'length_bp'], how='all')
-    #generate proportions
 
     genome_props = proportion_utils.GenomeProporitons(
         reference_fasta_dict=reference_fasta_dict,
@@ -78,12 +78,11 @@ def main():
         fastq_name=fastq_name,
         read_length=read_length,
         coverage_depth=coverage_depth,
+        max_reads=max_reads,
         seed=read_seed
         )
     read_generator.add_proportion_column()
     read_generator.create_reads_from_amplicons()
     read_generator.write_reads()
 
-if __name__ == "__main__":
-    main()
     
