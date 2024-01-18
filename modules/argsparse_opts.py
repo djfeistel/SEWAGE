@@ -32,7 +32,7 @@ def sewage_opts():
     amplicon_pathway = parser.add_argument_group("Amplicon Parameters", "")
     amplicon_pathway.add_argument(
         '-afn', '--amplicon_fasta_name', 
-        help='File name for amplicon data frame [default="SEWAGE_amplicons.fasta"]', 
+        help='File name for amplicon data frame and fasta file [default="SEWAGE_amplicons"]', 
         required=False,
         default=None,
         type=str,
@@ -51,7 +51,7 @@ def sewage_opts():
     proportions_options = parser.add_argument_group("Proportion options", "")
     proportions_options.add_argument(
         "-p", "--proportion_model", 
-        help="Generate equal (e), random (r), or dominate (d) proportions of reads [default: d]", 
+        help="Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads [default: d]", 
         required=False,
         default='r',
         type=str,
@@ -60,7 +60,7 @@ def sewage_opts():
     )
     proportions_options.add_argument(
         "-dg", "--dVOC_genome",
-        help='Name of dVOC. NOTE name must match the defline in the reference fasta file',
+        help='Name of dVOC. NOTE: name of dVOC must match the defline of the reference fasta file',
         required=False,
         default=None,
         type=str,
@@ -95,11 +95,18 @@ def sewage_opts():
     )
     read_options.add_argument(
         "-rl", "--read_length", 
-        help="Read length in bp (value cannot exceed amplicon length or will fail) [default: 250]", 
+        help="Read length in bp (value should not exceed amplicon length or will workflow fail) [default: 250]", 
         metavar='INT',
         default=250,
         type=int,
         dest='read_length'
+    )
+    read_options.add_argument(
+    "-auto", "--auto_read_length_detection", 
+    help="Automatically set the read length to the maximum possible based on amplicon length (i.e., half max amplicon + 50bp).  [default: False]",
+    action='store_true',
+    default=False,
+    dest='auto_read_length_detection'
     )
     read_options.add_argument(
         "-cd", "--coverage_depth", 
@@ -112,7 +119,7 @@ def sewage_opts():
     # self.max_reads
     read_options.add_argument(
         "-mr", "--max_reads", 
-        help="Total number of reads for each fastq file [default: None]. If set, --coverage_depth is ignored.", 
+        help="Total number of reads for each fastq file [default: None]. NOTE: If set, --coverage_depth is ignored.", 
         metavar='INT',
         default=None,
         type=int,

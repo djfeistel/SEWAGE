@@ -15,7 +15,8 @@ class ReadGenerator():
             storage_dir:str,
             fastq_name:str=None,
             read_length:int=250,
-            coverage_depth:int=60,
+            auto_read_length_detection:bool=False,
+            coverage_depth:int=500,
             max_reads:int=None,
             seed:int=13
     ):
@@ -24,6 +25,7 @@ class ReadGenerator():
         self.storage_dir = storage_dir
         self.fastq_name = fastq_name
         self.read_length = read_length
+        self.auto_read_length_detection = auto_read_length_detection
         self.coverage_depth = coverage_depth
         self.max_reads = max_reads
         self.seed = seed
@@ -36,9 +38,16 @@ class ReadGenerator():
         Create reads from amplicons
         '''
         # calulate total reads needed per amplicon for desired sequencing depth
+
         if self.max_reads is None:
-            self.df_amplicon['total_reads'] = ( (self.coverage_depth * self.df_amplicon['proportion']) * self.df_amplicon['length_bp'] ) // self.read_length
-            self.df_amplicon['total_reads'] = self.df_amplicon['total_reads'].astype(int)
+            if self.auto_read_length_detection:
+            # if true, find the max amplicon length divide in half and ad 50bp for overlap
+                self.read_length = (self.df_amplicon['length_bp'].max() // 2) + 50
+                self.df_amplicon['total_reads'] = ( (self.coverage_depth * self.df_amplicon['proportion']) * self.df_amplicon['length_bp'] ) // self.read_length
+                self.df_amplicon['total_reads'] = self.df_amplicon['total_reads'].astype(int)
+            else:
+                self.df_amplicon['total_reads'] = ( (self.coverage_depth * self.df_amplicon['proportion']) * self.df_amplicon['length_bp'] ) // self.read_length
+                self.df_amplicon['total_reads'] = self.df_amplicon['total_reads'].astype(int)
         else:
             total_proportion = self.df_amplicon['proportion'].sum()
             self.df_amplicon['total_reads'] = (self.df_amplicon['proportion'] / total_proportion) * self.max_reads

@@ -19,6 +19,7 @@ def main():
     proportion_seed = args.proportion_seed
     fastq_name = args.fastq_name
     read_length = args.read_length
+    auto_read_length_detection = args.auto_read_length_detection
     coverage_depth = args.coverage_depth
     max_reads =args.max_reads
     read_seed = args.read_seed
@@ -77,6 +78,7 @@ def main():
         storage_dir=storage_dir,
         fastq_name=fastq_name,
         read_length=read_length,
+        auto_read_length_detection=auto_read_length_detection,
         coverage_depth=coverage_depth,
         max_reads=max_reads,
         seed=read_seed

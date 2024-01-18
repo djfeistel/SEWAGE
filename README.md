@@ -22,7 +22,7 @@ SEWAGE -i <multi.fasta> -s <scheme>
 Help Menu:
 ```
 usage: SEWAGE [-h] -i STR -s STR [-afn STR] [-sd STR] [-p {r,e,d}] [-dg STR] [-dp FLOAT] [-ps INT] [-q STR]
-              [-rl INT] [-cd INT] [-mr INT] [-rs INT]
+              [-rl INT] [-auto] [-cd INT] [-mr INT] [-rs INT]
 
 Synthetically Engineered Wastewater-like sequence data for Assessing Genomic and Environmental populations
 
@@ -63,6 +63,9 @@ Read generator options:
   -rl INT, --read_length INT
                         Read length in bp (value should not exceed amplicon length or will workflow fail)
                         [default: 250]
+  -auto, --auto_read_length_detection
+                        Automatically set the read length to the maximum possible based on amplicon length
+                        (i.e., half max amplicon + 50bp). [default: False]
   -cd INT, --coverage_depth INT
                         Total sequence depth coverage for each fastq file [default: 500]
   -mr INT, --max_reads INT
@@ -91,5 +94,8 @@ From the code above, results will be stored in a directory called ```SEWAGE_{YYY
 
 **Reference_genomes.fasta**, **Proportion_Read_metadata.tsv**, and **parameters.txt** file names cannot be modified. The fasta, meta data, and fastq files listed above are named with default settings and can be modified using the ```--fastq_name``` and ```--amplicon_fasta_name``` flags.
 
-### Comments about creating amplicons:
+### Comments about generating amplicons:
 For each primer set, both the forward and reverse primer must be found in a reference sequence in order for amplification to occur, i.e., a single nucleotide mismatch between the reference sequence and a primer sequence results in a non-amplification event. Thus, if at least one primer is missing, the amplicion will not be 'amplified' for that primer and there will be no defline in the amplicon muliti-fasta file.  However the meta data file will indicate which primers did not amplify by stating the primer name followed by "No Amplification" in the **amplicon_sequence** column.
+
+### Comments about generating reads
+Reads are generated from each end of an amplicon. This approach works well when generateing short-read paired-end data on default settings and the latest primer schemes. However, when using the long-read primer scheme (Varskips "vsl1a"), default paramters should be modified and the resulting data should be manually checked before any downstream analysis with the fastq files.
