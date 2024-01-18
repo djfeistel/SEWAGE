@@ -81,7 +81,13 @@ From the code above, results will be stored in a directory called ```SEWAGE_{YYY
 
 |File Name|Description|
 |:----:|:----:|
-|Proportion_Read_metadata.tsv|data info|
+|Reference_genomes.fasta|Fasta file with reference genomes|
+|parameters.txt|Parameters used when running ```SEWAGE```|
+|Proportion_Read_metadata.tsv|Proportional data used to calculate reads|
+|SEWAGE_amplicons.fasta|Amplicons detected for all reference genomes|
+|SEWAGE_amplicons_metadata.tsv|Amplicon meta data for amplified and non-amplified primers|
+|SEWAGE_R1.fastq|Forward reads|
+|SEWAGE_R2.fastq|Reverse reads|
 
 
 ### Comments about creating amplicons:
