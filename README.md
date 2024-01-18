@@ -73,12 +73,16 @@ Read generator options:
 
 Fast Start: SEWAGE -i <multi.fasta> -s <scheme>
 ```
-### SEWAGE Amplicon Output:
+### Output:
 
-From the code above, the results would be stored in a directory called ```SEWAGE_amplicon``` by default in the current working directory.  For each reference genome, a ```_amplicons.fasta``` and ```_amplicons.log``` file is created.  The multi-fasta file contains the amplicons generated and the log is a tab seperated file with:  
+Assuming Minimal Usage ```SEWAGE -i <multi.fasta> -s <scheme>```
 
-|primer-name|reference-name|start-position|end-potision|amplicon-length (bp)|
-|:----:|:----:|:-----------:|:-----------:|:-----------:|
+From the code above, results will be stored in a directory called ```SEWAGE_{YYYYMMDD}_{HHMMSS}``` in the current working directory. Several files will be created:
+
+|File Name|Description|
+|:----:|:----:|
+|Proportion_Read_metadata.tsv|data info|
+
 
 ### Comments about creating amplicons:
 Both forward and reverse primers for each primer set must be found in a reference sequence in order for amplification to occur. If at least one primer is missing, the amplicion will not be amplified for that primer and there will be no defline in the amplicon muliti-fasta file.  However the log file will indicate which primers did not amplify by stating the primer name followed by "No Amplification".
