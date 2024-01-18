@@ -34,9 +34,8 @@ Input and Scheme Parameters:
 
   -i STR, --infasta STR
                         Multifasta file or single column list of pathways to fasta files
-  -s STR, --scheme STR  Available primer scheme: 
-  Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"] 
-  VarSkip:Long read = ["vsl1a"]; Short-read = ["vss1a", "vss2a", "vss2b"])
+  -s STR, --scheme STR  Available primer scheme: Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"] VarSkip:
+                        Long read = ["vsl1a"]; Short-read = ["vss1a", "vss2a", "vss2b"])
 
 Amplicon Parameters:
 
