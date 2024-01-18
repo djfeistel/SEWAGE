@@ -1,18 +1,13 @@
-import numpy as np
-import pandas as pd
-import random
-import argparse
-import os
-import fasta_funcitons_class_workshop
-import amplicons_functions_class_worshop
-import proportion_functions_workshop
-import read_generator_worshop
-from argsparse_opts_workshop import sewage_opts
+from modules import fasta_utils
+from modules import amplicon_utils
+from modules import proportion_utils
+from modules import read_generator_utils
+from modules import argsparse_opts
 
-if __name__ == "__main__":
-
-    args = sewage_opts()
-
+def main():
+    
+    args = argsparse_opts.sewage_opts()
+    
     infasta = args.infasta
     scheme = args.scheme
     amplicon_fasta_name = args.amplicon_fasta_name
@@ -27,7 +22,7 @@ if __name__ == "__main__":
     read_seed = args.read_seed
 
     # load fasta data
-    load_fasta = fasta_funcitons_class_workshop.LoadFasta(fasta=infasta)
+    load_fasta = fasta_utils.LoadFasta(fasta=infasta)
     if load_fasta.check_input_for_fasta_or_pathways():
         reference_fasta_dict = load_fasta.read_multifasta_into_dict()
     else:
@@ -36,7 +31,7 @@ if __name__ == "__main__":
     
     # amplicon generation 
         
-    amplicon_generator = amplicons_functions_class_worshop.GenerateAmplicons(
+    amplicon_generator = amplicon_utils.GenerateAmplicons(
         fasta_dict=reference_fasta_dict, 
         scheme=scheme,
         amplicon_fasta_name=amplicon_fasta_name,
@@ -44,19 +39,21 @@ if __name__ == "__main__":
     )
     #use storage_dir as input to read_generator
     storage_dir = amplicon_generator.check_amplicon_storage_dir()
+    argsparse_opts.write_parameters_log(args, storage_dir)
+    
     primer_scheme_dict = amplicon_generator.scheme_primer_dictionary()
     df_amplicon = amplicon_generator.amplicon_dataframe(
         genome_sequence_dict=reference_fasta_dict,
         primer_scheme_dict=primer_scheme_dict
         )
     
-    
-    amplicon_generator.write_fasta(df=df_amplicon)
+    df_amplicon = amplicon_generator.write_fasta(df=df_amplicon)
     #for whatever reason i need to filter No Amplified amplicons here
-    df_amplicon = df_amplicon[df_amplicon['amplicon_sequence'] != "No Amplification"]
-
+    #df_amplicon = df_amplicon[df_amplicon['amplicon_sequence'] != "No Amplification"]
+    #df_amplicon = df_amplicon.dropna(subset=['start', 'end', 'length_bp'], how='all')
     #generate proportions
-    genome_props = proportion_functions_workshop.GenomeProporitons(
+
+    genome_props = proportion_utils.GenomeProporitons(
         reference_fasta_dict=reference_fasta_dict,
         dVOC_genome=dVOC_genome,
         dVOC_proporiton=dVOC_proporiton,
@@ -74,7 +71,7 @@ if __name__ == "__main__":
             proportion_dict = genome_props.dvoc_proportions_random_genome_assignment()
 
     #generate reads
-    read_generator = read_generator_worshop.ReadGenerator(
+    read_generator = read_generator_utils.ReadGenerator(
         df_amplicon=df_amplicon, 
         proportion_dict=proportion_dict,
         storage_dir=storage_dir,
@@ -86,3 +83,7 @@ if __name__ == "__main__":
     read_generator.add_proportion_column()
     read_generator.create_reads_from_amplicons()
     read_generator.write_reads()
+
+if __name__ == "__main__":
+    main()
+    
