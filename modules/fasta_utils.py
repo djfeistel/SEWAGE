@@ -84,8 +84,13 @@ class LoadFasta():
                         fasta_dict[current_defline] = current_sequence
             return fasta_dict
 
-def write_reference_fasta(fasta_dict, storage_dir):
-    with open(os.path.join(storage_dir, "Reference_genomes.fasta"), "w") as wf:
+def write_reference_fasta(fasta_dict, file_prefix_name, storage_dir):
+    if file_prefix_name is not None:
+        file_output = f"{file_prefix_name}_Reference_genomes.fasta"
+    else:
+        file_output = f"SEWAGE_Reference_genomes.fasta"
+        
+    with open(os.path.join(storage_dir, file_output), "w") as wf:
         for genome, sequence in fasta_dict.items():
             wf.write(f">{genome}\n")
             wrapped_sequence = textwrap.wrap(sequence, width=60)

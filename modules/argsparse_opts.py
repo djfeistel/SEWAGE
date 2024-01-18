@@ -29,18 +29,18 @@ def sewage_opts():
         dest='scheme',
         default=None
     )
-    amplicon_pathway = parser.add_argument_group("Amplicon Parameters", "")
+    amplicon_pathway = parser.add_argument_group("Nameing Parameters", "")
     amplicon_pathway.add_argument(
-        '-afn', '--amplicon_fasta_name', 
-        help='File name for amplicon data frame and fasta file [default="SEWAGE_amplicons"]', 
+        '-n', '--file_prefix_name', 
+        help='File name prefix for all data generated [default="SEWAGE_"]', 
         required=False,
         default=None,
         type=str,
         metavar='STR',
-        dest='amplicon_fasta_name')
+        dest='file_prefix_name')
     amplicon_pathway.add_argument(
         '-sd', '--storage_dir', 
-        help='Directory name for amplicon data storage [default="SEWAGE_[data_time]"]', 
+        help='Directory name for data storage [default="SEWAGE_[data_time]"]', 
         required=False,
         default=None,
         type=str,
@@ -136,9 +136,12 @@ def sewage_opts():
     args = parser.parse_args()
     return args
 
-def write_parameters_log(args, storage_dir):
+def write_parameters_log(args, file_prefix_name, storage_dir):
     args_dict = vars(args)
     args_str = '\n'.join(f'{key}: {value}' for key, value in args_dict.items())
-    log_file_path = os.path.join(storage_dir, 'parameters.txt')
+    if file_prefix_name is not None:
+        log_file_path = os.path.join(storage_dir, f'{file_prefix_name}_parameters.txt')
+    else:
+        log_file_path = os.path.join(storage_dir, f'SEWAGE_parameters.txt')
     with open(log_file_path, 'w') as file:
         file.write(args_str + '\n')

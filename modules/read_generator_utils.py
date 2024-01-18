@@ -18,7 +18,8 @@ class ReadGenerator():
             auto_read_length_detection:bool=False,
             coverage_depth:int=500,
             max_reads:int=None,
-            seed:int=13
+            seed:int=13,
+            propotion_file_name:str=None
     ):
         self.df_amplicon = df_amplicon
         self.proportion_dict = proportion_dict
@@ -29,6 +30,7 @@ class ReadGenerator():
         self.coverage_depth = coverage_depth
         self.max_reads = max_reads
         self.seed = seed
+        self.propotion_file_name = propotion_file_name
 
     def add_proportion_column(self):
         self.df_amplicon['proportion'] = self.df_amplicon['reference_defline'].map(self.proportion_dict)
@@ -80,7 +82,11 @@ class ReadGenerator():
         self.df_amplicon = self.df_amplicon.drop(columns=drop_columns)
         columns_to_convert = ['R1_read_length', 'R2_read_length']
         self.df_amplicon[columns_to_convert] = self.df_amplicon[columns_to_convert].astype(int)
-        self.df_amplicon.to_csv(os.path.join(self.storage_dir, "Proportion_Read_metadata.tsv"), index=False, sep='\t')
+        if self.propotion_file_name is not None:
+
+            self.df_amplicon.to_csv(os.path.join(self.storage_dir, f"{self.propotion_file_name}_Proportion_Read_metadata.tsv"), index=False, sep='\t')
+        else:
+            self.df_amplicon.to_csv(os.path.join(self.storage_dir, "SEWAGE_Proportion_Read_metadata.tsv"), index=False, sep='\t')
 
     def write_fastq(self, R1, R2):
         

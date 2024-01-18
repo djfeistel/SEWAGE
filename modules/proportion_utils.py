@@ -56,7 +56,7 @@ class GenomeProporitons():
 
         # Check if dVOC_genome is provided and in reference_genomes_keys
         if self.dVOC_genome and self.dVOC_genome in reference_genomes_keys:
-            print(f"{self.dVOC_genome} found in reference", file=sys.stderr)
+            #print(f"{self.dVOC_genome} found in reference", file=sys.stderr)
             # Assign the dVOC_proportion to the dVOC_genome
             proportions = {genome: 0 for genome in reference_genomes_keys}
             proportions[self.dVOC_genome] = self.dVOC_proporiton
@@ -72,8 +72,8 @@ class GenomeProporitons():
 
             # Ensure no proportion is less than 0.001
             for i in range(len(scaled_proportions)):
-                if scaled_proportions[i] < 0.001:
-                    scaled_proportions[i] += 0.001
+                if scaled_proportions[i] < 0.01:
+                    scaled_proportions[i] += 0.01
 
             # Update the proportions dictionary with scaled values for other genomes
             for genome, prop in zip(other_genomes, scaled_proportions):
@@ -87,7 +87,7 @@ class GenomeProporitons():
             # If dVOC_genome is not provided or not in the list, apply the original logic
             print(f"{self.dVOC_genome} not found in reference", file=sys.stderr)
             print(f"Random assignment of dVOC instead", file=sys.stderr)
-            random_list = [random.uniform(0.001, 1) for _ in range(len(reference_genomes_keys))]
+            random_list = [random.uniform(0.01, 1) for _ in range(len(reference_genomes_keys))]
             random_index = random.randint(0, len(random_list) - 1)
             random_list[random_index] = self.dVOC_proporiton
             total_sum = sum(random_list)
@@ -97,8 +97,8 @@ class GenomeProporitons():
                 if i != random_index:
                     random_list[i] *= scaling_factor
                 for i in range(len(random_list)):
-                    if random_list[i] < 0.001:
-                        random_list[i] += 0.001
+                    if random_list[i] < 0.01:
+                        random_list[i] += 0.01
             total_sum = sum(random_list)
             random_list = [val / total_sum for val in random_list]
             random.shuffle(random_list)

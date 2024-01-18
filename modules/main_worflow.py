@@ -11,7 +11,7 @@ def main():
     args.infasta = os.path.realpath(args.infasta)
     infasta = args.infasta
     scheme = args.scheme
-    amplicon_fasta_name = args.amplicon_fasta_name
+    file_prefix_name = args.file_prefix_name
     amplicon_storage_dir = args.amplicon_storage_dir
     proportion_model = args.proportion_model
     dVOC_genome = args.dVOC_genome
@@ -37,14 +37,17 @@ def main():
     amplicon_generator = amplicon_utils.GenerateAmplicons(
         fasta_dict=reference_fasta_dict, 
         scheme=scheme,
-        amplicon_fasta_name=amplicon_fasta_name,
+        amplicon_fasta_name=file_prefix_name,
         amplicon_storage_dir=amplicon_storage_dir
     )
     #use storage_dir as input to read_generator
     storage_dir = amplicon_generator.check_amplicon_storage_dir()
-    fasta_utils.write_reference_fasta(fasta_dict=reference_fasta_dict, storage_dir=storage_dir)
+    fasta_utils.write_reference_fasta(
+        fasta_dict=reference_fasta_dict, 
+        file_prefix_name=file_prefix_name,
+        storage_dir=storage_dir)
     #write parameters log
-    argsparse_opts.write_parameters_log(args, storage_dir)
+    argsparse_opts.write_parameters_log(args, file_prefix_name, storage_dir)
     
     primer_scheme_dict = amplicon_generator.scheme_primer_dictionary()
     df_amplicon = amplicon_generator.amplicon_dataframe(
@@ -81,7 +84,8 @@ def main():
         auto_read_length_detection=auto_read_length_detection,
         coverage_depth=coverage_depth,
         max_reads=max_reads,
-        seed=read_seed
+        seed=read_seed,
+        propotion_file_name=file_prefix_name
         )
     read_generator.add_proportion_column()
     read_generator.create_reads_from_amplicons()
