@@ -77,7 +77,7 @@ Fast Start: SEWAGE -i <multi.fasta> -s <scheme>
 
 Assuming Minimal Usage ```SEWAGE -i <multi.fasta> -s <scheme>```
 
-From the code above, results will be stored in a directory called ```SEWAGE_{YYYYMMDD}_{HHMMSS}``` in the current working directory. Several files will be created:
+From the code above, results will be stored in a directory called ```SEWAGE_{YYYYMMDD}_{HHMMSS}``` in the current working directory. You can change the name of teh storage directory by using the ```--storage_dir``` flag. Several files will be created:
 
 |File Name|Description|
 |:----:|:----:|
