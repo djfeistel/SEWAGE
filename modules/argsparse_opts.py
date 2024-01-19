@@ -116,7 +116,6 @@ def sewage_opts():
         type=int,
         dest='coverage_depth'
     )
-    # self.max_reads
     read_options.add_argument(
         "-mr", "--max_reads", 
         help="Total number of reads for each fastq file [default: None]. NOTE: If set, --coverage_depth is ignored.", 
