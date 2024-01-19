@@ -5,7 +5,7 @@ def sewage_opts():
     parser = argparse.ArgumentParser(
         prog="SEWAGE",
         description=f"\nSynthetically Engineered Wastewater sequence data for Assessing Genomic Entities\n",
-        epilog=f"Fast Start: SEWAGE -i <multi.fasta> -s <scheme>"
+        epilog=f"Minimal Usage: SEWAGE -i <multi.fasta> -s <scheme>"
     )
     '''input and output'''
     required_pathway = parser.add_argument_group("Input and Scheme Parameters", "Required flags")
@@ -29,29 +29,36 @@ def sewage_opts():
         dest='scheme',
         default=None
     )
-    amplicon_pathway = parser.add_argument_group("Naming Parameters", "")
-    amplicon_pathway.add_argument(
+    # output options #
+    output_pathway = parser.add_argument_group("Output naming", "")
+    output_pathway.add_argument(
         '-n', '--file_prefix_name', 
-        help='File name prefix for all amplicon and meta data generated [default="SEWAGE_"]', 
+        help='File name prefix for all generated data [default="SEWAGE"]', 
         required=False,
-        default=None,
+        default="SEWAGE",
         type=str,
         metavar='STR',
         dest='file_prefix_name')
-    amplicon_pathway.add_argument(
-        '-sd', '--storage_dir', 
-        help='Directory name for data storage [default="SEWAGE_[data_time]"]', 
+    output_pathway.add_argument(
+        '-o', '--storage_dir', 
+        help='Directory name for data storage [default="SEWAGE_Workspace"]', 
         required=False,
-        default=None,
+        default="SEWAGE_Workspace",
         type=str,
         metavar='STR',
-        dest='amplicon_storage_dir')
-
-    # Create a group for the "Propirtions" section
+        dest='storage_dir')
+    output_pathway.add_argument(
+        "-t", "--time_stamp", 
+        help="Append date and time stamp to the storage directory [default: False]",
+        action='store_true',
+        default=False,
+        dest='time_stamp'
+    )
+    # Propirtion options #
     proportions_options = parser.add_argument_group("Proportion options", "")
     proportions_options.add_argument(
         "-p", "--proportion_model", 
-        help="Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads [default: d]", 
+        help="Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads [default: r]", 
         required=False,
         default='r',
         type=str,
@@ -84,29 +91,23 @@ def sewage_opts():
         type=int,
         dest='proportion_seed'
     )
+    # read options #
     read_options = parser.add_argument_group("Read generator options", "")
     read_options.add_argument(
-        "-q", "--fastq_name", 
-        help="Name of fastq files for F/R reads [default: SEWAGE_{R1/R2}.fastq]", 
-        metavar='STR',
-        default=None,
-        type=str,
-        dest='fastq_name'
-    )
-    read_options.add_argument(
         "-rl", "--read_length", 
-        help="Read length in bp (value should not exceed amplicon length or will workflow fail) [default: 250]", 
+        help="Read length in bp (value should not exceed amplicon length or will workflow fail) [default: 150]", 
         metavar='INT',
-        default=250,
+        default=150,
         type=int,
         dest='read_length'
     )
     read_options.add_argument(
-    "-auto", "--auto_read_length_detection", 
-    help="Automatically set the read length to the maximum possible based on amplicon length (i.e., half max amplicon + 50bp).  [default: False]",
-    action='store_true',
-    default=False,
-    dest='auto_read_length_detection'
+        "-fl", "--frag_length", 
+        help="Fragment length in bp (value should not exceed amplicon length or will workflow fail) [default: 300]", 
+        metavar='INT',
+        default=300,
+        type=int,
+        dest='frag_length'
     )
     read_options.add_argument(
         "-cd", "--coverage_depth", 
@@ -115,14 +116,6 @@ def sewage_opts():
         default=500,
         type=int,
         dest='coverage_depth'
-    )
-    read_options.add_argument(
-        "-mr", "--max_reads", 
-        help="Total number of reads for each fastq file [default: None]. NOTE: If set, --coverage_depth is ignored.", 
-        metavar='INT',
-        default=None,
-        type=int,
-        dest='max_reads'
     )
     read_options.add_argument(
         "-rs", "--read_seed", 
@@ -135,12 +128,11 @@ def sewage_opts():
     args = parser.parse_args()
     return args
 
-def write_parameters_log(args, file_prefix_name, storage_dir):
+def write_parameters_log(args, file_prefix_name, storage_pathway):
     args_dict = vars(args)
     args_str = '\n'.join(f'{key}: {value}' for key, value in args_dict.items())
-    if file_prefix_name is not None:
-        log_file_path = os.path.join(storage_dir, f'{file_prefix_name}_parameters.txt')
-    else:
-        log_file_path = os.path.join(storage_dir, f'SEWAGE_parameters.txt')
+    
+    log_file_path = os.path.join(storage_pathway, f'{file_prefix_name}_parameters.txt')
+
     with open(log_file_path, 'w') as file:
         file.write(args_str + '\n')

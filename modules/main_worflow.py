@@ -1,94 +1,133 @@
 import os
+import sys
 from modules import fasta_utils
 from modules import amplicon_utils
 from modules import proportion_utils
 from modules import read_generator_utils
 from modules import argsparse_opts
+from modules import storage_utils
 
 def main():
     
     args = argsparse_opts.sewage_opts()
     args.infasta = os.path.realpath(args.infasta)
+    
     infasta = args.infasta
     scheme = args.scheme
     file_prefix_name = args.file_prefix_name
-    amplicon_storage_dir = args.amplicon_storage_dir
+    storage_dir = args.storage_dir
+    time_stamp = args.time_stamp
     proportion_model = args.proportion_model
     dVOC_genome = args.dVOC_genome
     dVOC_proporiton = args.dVOC_proporiton
     proportion_seed = args.proportion_seed
-    fastq_name = args.fastq_name
     read_length = args.read_length
-    auto_read_length_detection = args.auto_read_length_detection
+    frag_length = args.frag_length
     coverage_depth = args.coverage_depth
-    max_reads =args.max_reads
     read_seed = args.read_seed
 
-    # load fasta data
-    load_fasta = fasta_utils.LoadFasta(fasta=infasta)
-    if load_fasta.check_input_for_fasta_or_pathways():
-        reference_fasta_dict = load_fasta.read_multifasta_into_dict()
-    else:
-        pathway_list = load_fasta.create_list_of_pathways()
-        reference_fasta_dict = load_fasta.read_fasta_pathways_into_dict(pathway_list)
-    
-    # amplicon generation 
-        
-    amplicon_generator = amplicon_utils.GenerateAmplicons(
-        fasta_dict=reference_fasta_dict, 
-        scheme=scheme,
-        amplicon_fasta_name=file_prefix_name,
-        amplicon_storage_dir=amplicon_storage_dir
+    ### fasta utilities ###
+    fastaUtilsInstance = fasta_utils.FastaUtils(
+        fasta=infasta,
+        file_prefix_name=file_prefix_name
     )
-    #use storage_dir as input to read_generator
-    storage_dir = amplicon_generator.check_amplicon_storage_dir()
-    fasta_utils.write_reference_fasta(
-        fasta_dict=reference_fasta_dict, 
-        file_prefix_name=file_prefix_name,
-        storage_dir=storage_dir)
-    #write parameters log
-    argsparse_opts.write_parameters_log(args, file_prefix_name, storage_dir)
-    
-    primer_scheme_dict = amplicon_generator.scheme_primer_dictionary()
-    df_amplicon = amplicon_generator.amplicon_dataframe(
-        genome_sequence_dict=reference_fasta_dict,
-        primer_scheme_dict=primer_scheme_dict
-        )
-    
-    df_amplicon = amplicon_generator.write_fasta(df=df_amplicon)
 
-    genome_props = proportion_utils.GenomeProporitons(
+    if fastaUtilsInstance.check_input_for_fasta_or_pathways():
+        reference_fasta_dict = fastaUtilsInstance.read_multifasta_into_dict()
+    else:
+        fastaUtilsInstance.create_list_of_pathways()
+        try:
+            if fastaUtilsInstance.check_pathway_list_for_fasta():
+                reference_fasta_dict = fastaUtilsInstance.read_fasta_pathways_into_dict()
+            else:
+                print("Error: The pathway list does not contain valid FASTA files.")
+                sys.exit(1)  # Terminate the program with a non-zero exit code
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            sys.exit(1)
+
+    reference_fasta_dict = fastaUtilsInstance.get_fasta_dict()
+
+    if not reference_fasta_dict:
+        raise ValueError(f"{infasta} file was not imported correctly")
+    
+    ### amplicon utilities ###
+        
+    ampliconUtilsInstance = amplicon_utils.GenerateAmplicons(
+        reference_fasta_dict=reference_fasta_dict, 
+        scheme=scheme,
+        file_prefix_name=file_prefix_name
+    )
+
+    ampliconUtilsInstance.create_amplicon_dataframe()
+    df_amplicon = ampliconUtilsInstance.get_df_amplicon()
+
+    if df_amplicon.empty:
+        raise ValueError("No amplicons were generated. \
+                         Check reference genomes for compatability with {scheme} primer scheme.")
+    
+    ### proporitons utilities ###
+
+    proportionUtilsInstance = proportion_utils.GenomeProporitons(
         reference_fasta_dict=reference_fasta_dict,
         dVOC_genome=dVOC_genome,
         dVOC_proporiton=dVOC_proporiton,
         random_seed=proportion_seed
         )
     
-    if proportion_model == "e":
-        proportion_dict = genome_props.equal_proportions()
-    elif proportion_model == "r":
-        proportion_dict = genome_props.random_proportions()
+    if proportion_model == "r":
+        proportionUtilsInstance.random_proportions()
+    elif proportion_model == "e":
+        proportionUtilsInstance.equal_proportions()
     elif proportion_model == "d":
         if dVOC_genome is not None:
-            proportion_dict = genome_props.dvoc_proportions_genome_assignment()
+            proportionUtilsInstance.dvoc_proportions_genome_assignment()
         else:
-            proportion_dict = genome_props.dvoc_proportions_random_genome_assignment()
+            proportionUtilsInstance.dvoc_proportions_random_genome_assignment()
 
-    #generate reads
-    read_generator = read_generator_utils.ReadGenerator(
+    proportions_dict = proportionUtilsInstance.get_proportions_dict()
+
+    if not proportions_dict:
+        raise ValueError("No primers found")
+    
+    ### generate reads utilities ###
+
+    readGeneratorUtilsInstance = read_generator_utils.ReadGenerator(
         df_amplicon=df_amplicon, 
-        proportion_dict=proportion_dict,
-        storage_dir=storage_dir,
-        fastq_name=fastq_name,
+        proportion_dict=proportions_dict,
+        fastq_name=file_prefix_name,
+        propotion_file_name=file_prefix_name,
         read_length=read_length,
-        auto_read_length_detection=auto_read_length_detection,
+        frag_length=frag_length,
         coverage_depth=coverage_depth,
-        max_reads=max_reads,
-        seed=read_seed,
-        propotion_file_name=file_prefix_name
+        seed=read_seed
         )
-    read_generator.add_proportion_column()
-    read_generator.create_reads_from_amplicons()
-    read_generator.write_reads()
+    
+    readGeneratorUtilsInstance.create_reads_workflow()
+
+    df_reads = readGeneratorUtilsInstance.get_df_reads()
+    
+    ### save results ###
+    
+    storageUtilsInstance = storage_utils.StorageUtils(
+        storage_dir=storage_dir, 
+        time_stamp=time_stamp
+    )
+
+    storageUtilsInstance.add_time_stamp()
+    storageUtilsInstance.create_storage_dir()
+    storage_pathway = storageUtilsInstance.get_storage_pathway()
+
+    # # save fasta
+    argsparse_opts.write_parameters_log(args=args, file_prefix_name=file_prefix_name, storage_pathway=storage_pathway)
+    fastaUtilsInstance.write_reference_fasta(storage_pathway=storage_pathway)
+    ampliconUtilsInstance.save_amplicon_fasta(storage_pathway=storage_pathway)
+    readGeneratorUtilsInstance.write_fastq_files(storage_pathway=storage_pathway)
+    readGeneratorUtilsInstance.save_read_df(storage_pathway=storage_pathway)
+    
+
+
+
+
 
     

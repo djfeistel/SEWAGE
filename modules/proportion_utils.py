@@ -17,11 +17,15 @@ class GenomeProporitons():
         self.dVOC_genome = dVOC_genome
         self.dVOC_proporiton = dVOC_proporiton
         self.random_seed = random_seed
+        self.proportions_dict = None
 
+    def get_proportions_dict(self):
+        return self.proportions_dict
+    
     def equal_proportions(self)->list:
         reference_genomes_keys = self.reference_fasta_dict.keys()
         equal_proportions = [1/len(reference_genomes_keys)] * len(reference_genomes_keys)
-        return dict(zip(reference_genomes_keys, equal_proportions))
+        self.proportions_dict = dict(zip(reference_genomes_keys, equal_proportions))
 
     def random_proportions(self) -> dict:
         '''
@@ -45,7 +49,7 @@ class GenomeProporitons():
         # renormalize proportions
         normalized_proportions /= np.sum(normalized_proportions)
         # create tuple
-        return dict(zip(reference_genomes_keys, normalized_proportions))
+        self.proportions_dict = dict(zip(reference_genomes_keys, normalized_proportions))
         
     def dvoc_proportions(self) -> dict:
         # Set random seed for reproducibility
@@ -81,7 +85,7 @@ class GenomeProporitons():
 
             # Normalize the proportions to sum up to 1
             total_sum = sum(proportions.values())
-            proportions = {genome: prop / total_sum for genome, prop in proportions.items()}
+            self.proportions_dict = {genome: prop / total_sum for genome, prop in proportions.items()}
 
         else:
             # If dVOC_genome is not provided or not in the list, apply the original logic
@@ -102,9 +106,7 @@ class GenomeProporitons():
             total_sum = sum(random_list)
             random_list = [val / total_sum for val in random_list]
             random.shuffle(random_list)
-            proportions = dict(zip(reference_genomes_keys, random_list))
-
-        return proportions
+            self.proportions_dict = dict(zip(reference_genomes_keys, random_list))
     
     def dvoc_proportions_genome_assignment(self) -> dict:
         # Set random seed for reproducibility
@@ -140,8 +142,8 @@ class GenomeProporitons():
 
             # Normalize the proportions to sum up to 1
             total_sum = sum(proportions.values())
-            proportions = {genome: prop / total_sum for genome, prop in proportions.items()}
-            return proportions
+            self.proportions_dict = {genome: prop / total_sum for genome, prop in proportions.items()}
+            
         else:
             # If dVOC_genome is not provided or not in the list
             raise ValueError(f"{self.dVOC_genome} not found in reference file")           
@@ -168,7 +170,5 @@ class GenomeProporitons():
         total_sum = sum(random_list)
         random_list = [val / total_sum for val in random_list]
         random.shuffle(random_list)
-        proportions = dict(zip(reference_genomes_keys, random_list))
-
-        return proportions
+        self.proportions_dict = dict(zip(reference_genomes_keys, random_list))
         
