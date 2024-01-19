@@ -109,3 +109,4 @@ Users can modify the length of reads with the ```--read_length``` flag and lengt
 2. Quality scores assigned to bases for high adn low quality
 3. INDELS
 4. Long Read 
+5. Conda package
