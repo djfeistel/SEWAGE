@@ -1,6 +1,6 @@
 # SEWAGE 
 
-### Synthetically Engineered Wastewater sequence data for Assessing Genomic Entities
+### <s>S</u>ynthetically <s>E</u>ngineered <s>W</u>astewater sequence data for <s>A</u>ssessing <s>G</u>enomic <s>E</u>ntities
 
 SEWAGE is a tool for generating reproducible sequence data that represents a heterogeneous population of closely related species at various proportions. Specifically, it was designed to mirror sequence data that resembles a mixed SARS-CoV-2 population derived from a wastewater sample by using targeted-enrichment or tiled-amplicon PCR approaches.
 
