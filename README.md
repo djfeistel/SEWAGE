@@ -103,3 +103,9 @@ Users can modify the length of reads with the ```--read_length``` flag and lengt
 ### Additional Notes
 **NOTE:** Reads are assigned the highest Q-score possible for now.  
 **NOTE:** Only "short-read" fastq data is available as of now. I am activly working on adding long read output data.
+
+### Future Additions:
+1. Fragments pulled from normal distribution with std
+2. Quality scores assigned to bases for high adn low quality
+3. INDELS
+4. Long Read 
