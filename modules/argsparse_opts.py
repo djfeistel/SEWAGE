@@ -1,209 +1,146 @@
 import argparse
+import os
 
-def sequence_opts():
+def sewage_opts():
     parser = argparse.ArgumentParser(
         prog="SEWAGE",
-        description=f"\nSynthetically Enriched Wastewater-like sequence data for Assessing Genomic and Environmental populations\n",
-        epilog=f"Minimal usage: ./SEWAGE -i <input>"
+        description=f"\nSynthetically Engineered Wastewater sequence data for Assessing Genomic Entities\n",
+        epilog=f"Fast Start: SEWAGE -i <multi.fasta> -s <scheme>"
     )
     '''input and output'''
-    required_pathway = parser.add_argument_group("Input and Output Parameters", "-i/--in is required")
+    required_pathway = parser.add_argument_group("Input and Scheme Parameters", "Required flags")
     required_pathway.add_argument(
-        "-i", "--in", 
-        help="Pathway to directory with FASTA files or a text file with a list of pathways to FASTA files. \
-                NOTE: FASTA files must end in .fasta, .fa, or .fsa when a pathway is specified.", 
-        required=False,
-        dest='fasta',
+        "-i", "--infasta", 
+        help="Multifasta file or single column list of pathways to fasta files", 
+        required=True,
+        dest='infasta',
         type=str,
         default=None,
-        metavar='PATHWAY or FILE'
+        metavar='STR'
     )
     required_pathway.add_argument(
-        "-o", "--out", 
-        help="Name of output directory for storage (if not specificed, default is 'SEWAGE_' + 10 random alphanumeric characters).", 
-        required=False,
-        dest='out',
-        metavar='STR',
+        '-s', '--scheme', 
+        help=f'Available primer scheme: \nArtic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"]\n \
+        VarSkip: Long read = ["vsl1a"]; Short-read = ["vss1a", "vss2a", "vss2b"])', 
+        required=True, 
         type=str,
+        choices=["V1", "V2", "V3", "V4", "V4.1", "V5.3.2", "vsl1a", "vss1a", "vss2a", "vss2b"],
+        metavar='STR',
+        dest='scheme',
         default=None
     )
-    required_pathway.add_argument(
-        "-O", "--out_pathway", 
-        help="Pathway to where output directory is stored [default='.']", 
+    amplicon_pathway = parser.add_argument_group("Naming Parameters", "")
+    amplicon_pathway.add_argument(
+        '-n', '--file_prefix_name', 
+        help='File name prefix for all amplicon and meta data generated [default="SEWAGE_"]', 
         required=False,
-        dest='out_pathway',
-        metavar='DIR',
+        default=None,
         type=str,
-        default='.'
-    )
+        metavar='STR',
+        dest='file_prefix_name')
+    amplicon_pathway.add_argument(
+        '-sd', '--storage_dir', 
+        help='Directory name for data storage [default="SEWAGE_[data_time]"]', 
+        required=False,
+        default=None,
+        type=str,
+        metavar='STR',
+        dest='amplicon_storage_dir')
 
     # Create a group for the "Propirtions" section
-    proportions_options = parser.add_argument_group("Proportion options [default is -p r -rs 13]", "")
+    proportions_options = parser.add_argument_group("Proportion options", "")
     proportions_options.add_argument(
-        "-p", "--proportion", 
-        help="Generate random (r) or equal (e) proportions of reads", 
+        "-p", "--proportion_model", 
+        help="Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads [default: d]", 
         required=False,
-        dest="proportion",
         default='r',
         type=str,
-        choices=['r', 'e']
+        choices=['r', 'e', 'd'],
+        dest="proportion_model",
+    )
+    proportions_options.add_argument(
+        "-dg", "--dVOC_genome",
+        help='Name of dVOC. NOTE: name of dVOC must match the defline of the reference fasta file',
+        required=False,
+        default=None,
+        type=str,
+        metavar="STR",
+        dest="dVOC_genome"
     )    
     proportions_options.add_argument(
-        "-rs", "--rndSeed", 
-        help="Random seed for generateing proportions [default=13]", 
-        metavar='INT',
-        default=13,
-        type=int,
-        dest='rndSeed'
-    )
-    '''art_illumina paramters''' 
-    art_parameters = parser.add_argument_group(
-        "ART parameters", 'Default parameters listed below are for \
-        simulating "perfect" reads at 150bp and can be modified as needed. \
-        All other parameters not listed here are in default setting or not used as defined by "art_illumia" \
-        and cannot be access via SEWAGE. Please be familiar with how "art_illumina" \
-        functins before modifying these parameters')
-    art_parameters.add_argument(
-        "-pf", "--pfold", 
-        help="Value to be mutiplied by proportion for use with '--fcov' from 'art_illumina' [default=1000]\
-            Example: proportion*pfold=fcov or fold coverage", 
-        metavar='INT',
-        default=1000,
-        type=int,
-        dest='pfold'
-    )
-    art_parameters.add_argument(
-        "-ss", "--seqSys", 
-        help="From 'art_illumina': 'The name of Illumina sequencing system of the built-in profile used for \
-            simulation' [default=HS25]. Note: chosing a differnt Illumina sequecning system may require \
-                modifying the 'art_illumina' paramters beforehand", 
-        #metavar='STR',
-        default='HS25',
-        type=str,
-        dest='ss',
-        choices=['HS10', 'HS20', 'HS25', 
-                 'HSXn', 'HSXt', 'MinS', 
-                 'MSv1', 'MSv3', 'NS50', 
-                 'GA1', 'GA2']
-    )
-    art_parameters.add_argument(
-        "-l", "--len", 
-        help="From 'art_illumina': the length of reads to be simulated [default=150]", 
-        metavar='INT',
-        default=150,
-        type=int,
-        dest='l'
-    )
-    art_parameters.add_argument(
-        "-m", "--mflen", 
-        help="From 'art_illumina': the mean size of DNA/RNA fragments for paired-end simulations [default=250]", 
-        metavar='INT',
-        default=250, #change from 200 to 250
-        type=int,
-        dest='m'
-    )
-    art_parameters.add_argument(
-        "-s", "--sdev", 
-        help="From 'art_illumina': the standard deviation of DNA/RNA fragment size for paired-end simulations [default=1]", 
-        metavar='INT',
-        default=1,
-        type=int,
-        dest='s'
-    )
-    art_parameters.add_argument(
-        "-ir", "--insRate", 
-        help="From 'art_illumina': the first-read insertion rate [default=0]", 
-        metavar='INT',
-        default=0,
-        type=int,
-        dest='ir'
-    )
-    art_parameters.add_argument(
-        "-ir2", "--insRate2", 
-        help="From 'art_illumina': the second-read insertion rate [default=0]", 
-        metavar='INT',
-        default=0,
-        type=int,
-        dest='ir2'
-    )
-    art_parameters.add_argument(
-        "-dr", "--delRate", 
-        help="From 'art_illumina': the first-read deletion rate [default=0]", 
-        metavar='INT',
-        default=0,
-        type=int,
-        dest='dr'
-    )
-    art_parameters.add_argument(
-        "-dr2", "--delRate2", 
-        help="From 'art_illumina': the second-read deletion rate [default=0]", 
-        metavar='INT',
-        default=0,
-        type=int,
-        dest='dr2'
-    )
-    art_parameters.add_argument(
-        "-rsA", "--rndSeed_art_illumina", 
-        help="From 'art_illumina': the seed for random number generator [default=13]", 
-        metavar='INT',
-        default=13,
-        type=int,
-        dest='rndSeed_art_illumina'
-    )
-    art_parameters.add_argument(
-        "-k", "--maxIndel", 
-        help="From 'art_illumina': the maximum total number of insertion and deletion per read [default=0]", 
-        metavar='INT',
-        default=0,
-        type=int,
-        dest='maxIndel'
-    )
-    art_parameters.add_argument(
-        "-nf", "--maskN", 
-        help="From 'art_illumina': the cutoff frequency of 'N' in a window size of the read length for masking genomic regions [default=0]", 
-        metavar='INT',
-        default=0,
-        type=int,
-        dest='nf'
-    )
-    art_parameters.add_argument(
-        "-qL", "--minQ", 
-        help="From 'art_illumina': the minimum base quality score [default=28]", 
-        metavar='INT',
-        default=28,
-        type=int,
-        dest='qL'
-    )
-    art_parameters.add_argument(
-        "-qU", "--maxQ", 
-        help="From 'art_illumina': the maximum base quality score [default=40]", 
-        metavar='INT',
-        default=40,
-        type=int,
-        dest='qU'
-    )
-    art_parameters.add_argument(
-        "-qs", "--qShift", 
-        help="From 'art_illumina': the amount to shift every first-read quality score by", 
-        metavar='INT',
-        type=int,
-        dest='qs'
-    )
-    art_parameters.add_argument(
-        "-qs2", "--qShift2", 
-        help="From 'art_illumina': the amount to shift every second-read quality score by", 
-        metavar='INT',
-        type=int,
-        dest='qs2'
-    )
-    tool_description = parser.add_argument_group("Tool Description", "Detailed information about the tool")
-    tool_description.add_argument(
-        "--details", 
-        help="", 
+        "-dp", "--dVOC_proporiton",
+        help="Proportion of dDOV [default: 0.8]",
         required=False,
-        dest="details",
-        action='store_true'
+        default=0.8,
+        metavar="FLOAT",
+        type=float,
+        dest="dVOC_proporiton",
+    )    
+    proportions_options.add_argument(
+        "-ps", "--proportion_seed", 
+        help="Random seed number for reproducing proportions [default: 13]", 
+        metavar='INT',
+        default=13,
+        type=int,
+        dest='proportion_seed'
     )
-
+    read_options = parser.add_argument_group("Read generator options", "")
+    read_options.add_argument(
+        "-q", "--fastq_name", 
+        help="Name of fastq files for F/R reads [default: SEWAGE_{R1/R2}.fastq]", 
+        metavar='STR',
+        default=None,
+        type=str,
+        dest='fastq_name'
+    )
+    read_options.add_argument(
+        "-rl", "--read_length", 
+        help="Read length in bp (value should not exceed amplicon length or will workflow fail) [default: 250]", 
+        metavar='INT',
+        default=250,
+        type=int,
+        dest='read_length'
+    )
+    read_options.add_argument(
+    "-auto", "--auto_read_length_detection", 
+    help="Automatically set the read length to the maximum possible based on amplicon length (i.e., half max amplicon + 50bp).  [default: False]",
+    action='store_true',
+    default=False,
+    dest='auto_read_length_detection'
+    )
+    read_options.add_argument(
+        "-cd", "--coverage_depth", 
+        help="Total sequence depth coverage for each fastq file [default: 500]", 
+        metavar='INT',
+        default=500,
+        type=int,
+        dest='coverage_depth'
+    )
+    read_options.add_argument(
+        "-mr", "--max_reads", 
+        help="Total number of reads for each fastq file [default: None]. NOTE: If set, --coverage_depth is ignored.", 
+        metavar='INT',
+        default=None,
+        type=int,
+        dest='max_reads'
+    )
+    read_options.add_argument(
+        "-rs", "--read_seed", 
+        help="Random seed number for reproducing reads [default: 13]",
+        metavar='INT',
+        default=13,
+        type=int,
+        dest='read_seed'
+    )
     args = parser.parse_args()
     return args
+
+def write_parameters_log(args, file_prefix_name, storage_dir):
+    args_dict = vars(args)
+    args_str = '\n'.join(f'{key}: {value}' for key, value in args_dict.items())
+    if file_prefix_name is not None:
+        log_file_path = os.path.join(storage_dir, f'{file_prefix_name}_parameters.txt')
+    else:
+        log_file_path = os.path.join(storage_dir, f'SEWAGE_parameters.txt')
+    with open(log_file_path, 'w') as file:
+        file.write(args_str + '\n')
