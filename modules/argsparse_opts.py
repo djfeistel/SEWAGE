@@ -4,7 +4,7 @@ import os
 def sewage_opts():
     parser = argparse.ArgumentParser(
         prog="SEWAGE",
-        description=f"\nSynthetically Engineered Wastewater-like sequence data for Assessing Genomic and Environmental populations\n",
+        description=f"\nSynthetically Engineered Wastewater sequence data for Assessing Genomic Entities\n",
         epilog=f"Fast Start: SEWAGE -i <multi.fasta> -s <scheme>"
     )
     '''input and output'''
