@@ -26,7 +26,7 @@ usage: SEWAGE [-h] -i STR -s STR [-n STR] [-sd STR] [-p {r,e,d}] [-dg STR] [-dp 
 
 Synthetically Engineered Wastewater-like sequence data for Assessing Genomic and Environmental populations
 
-options:
+optional arguments:
   -h, --help            show this help message and exit
 
 Input and Scheme Parameters:
@@ -37,10 +37,10 @@ Input and Scheme Parameters:
   -s STR, --scheme STR  Available primer scheme: Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"] VarSkip:
                         Long read = ["vsl1a"]; Short-read = ["vss1a", "vss2a", "vss2b"])
 
-Nameing Parameters:
+Naming Parameters:
 
   -n STR, --file_prefix_name STR
-                        File name prefix for all data generated [default="SEWAGE_"]
+                        File name prefix for all amplicon and meta data generated [default="SEWAGE_"]
   -sd STR, --storage_dir STR
                         Directory name for data storage [default="SEWAGE_[data_time]"]
 
@@ -48,7 +48,7 @@ Proportion options:
 
   -p {r,e,d}, --proportion_model {r,e,d}
                         Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads
-                        [default: r]
+                        [default: d]
   -dg STR, --dVOC_genome STR
                         Name of dVOC. NOTE: name of dVOC must match the defline of the reference fasta file
   -dp FLOAT, --dVOC_proporiton FLOAT

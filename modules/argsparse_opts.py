@@ -29,10 +29,10 @@ def sewage_opts():
         dest='scheme',
         default=None
     )
-    amplicon_pathway = parser.add_argument_group("Nameing Parameters", "")
+    amplicon_pathway = parser.add_argument_group("Naming Parameters", "")
     amplicon_pathway.add_argument(
         '-n', '--file_prefix_name', 
-        help='File name prefix for all data generated [default="SEWAGE_"]', 
+        help='File name prefix for all amplicon and meta data generated [default="SEWAGE_"]', 
         required=False,
         default=None,
         type=str,
