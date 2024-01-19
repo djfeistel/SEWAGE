@@ -106,7 +106,8 @@ Users can modify the length of reads with the ```--read_length``` flag and lengt
 
 ### Future Additions:
 1. Fragments pulled from normal distribution with std for variable read lengths 
-2. Quality scores assigned to bases for high adn low quality
-3. INDELS
+2. Quality scores assigned to bases for high and low quality
+3. INDELS addedd 
 4. Long Read 
 5. Conda package
+6. Possibly adding adapters to ends of smaller sequences?
