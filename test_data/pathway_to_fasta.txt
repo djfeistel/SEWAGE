@@ -1,0 +1,5 @@
+/Users/djfeistel/GitHub/SEWAGE/test_data/B.1.526_Iota.fasta
+/Users/djfeistel/GitHub/SEWAGE/test_data/B.1.617.1_Kappa.fasta
+/Users/djfeistel/GitHub/SEWAGE/test_data/B.1.617.2_Delta.fasta
+/Users/djfeistel/GitHub/SEWAGE/test_data/BA.1_Omicron.fasta
+/Users/djfeistel/GitHub/SEWAGE/test_data/P.1_Gamma.fasta
