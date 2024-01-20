@@ -97,8 +97,8 @@ By default, the ```--proportion_model``` flag is set to ```r``` or random. For a
 
 ### Comments about generating reads
 Default parameters when using the ```minimal usage``` command have been optimized to result in 150bp F/R reads form 300bp fragments at a total depth of coverage of approximatly 500X between all reference sequences supplied (NOTE: estimated depth of coverage will result in higher coverage due to overlaping regions of tiled amplicons when using defult settings). Furthermore, there are no qualitye scores other than 40 assotiated with bases (as of now). 
-When parameters are adjusted, users are recommended to manually values in the **SEWAGE_metadata.tsv** file for the proporitons, total number of fragments generated per ampicon, and the length of reads before running any downstream analyses and adjust accordingly to the experiment.  
-Users can modify the length of reads with the ```--read_length``` flag and length of fragments with the ```--frag_length``` flag to mimic different sequencing platforms (e.g. 75bp, 150bp, 250bp, etc...). Note that depending on the scheme used, the default 250bp might need to be adjusted as only the ends of the amplicons are 'sequenced' and are nto broken up into smaller fragments.   
+When parameters are adjusted, users are recommended to manually inspect values in the **SEWAGE_metadata.tsv** file for the proporitons, total number of fragments generated per ampicon, and the length of reads, and any other *in silico* data before running any downstream analyses (adjust accordingly to the experiment).  
+Users can modify the length of reads with vi the ```--read_length``` flag and length of fragments with the ```--frag_length``` flag to mimic different sequencing platforms (e.g. 75bp, 150bp, 250bp, etc...).
 
 ### Additional Notes
 **NOTE:** Reads are assigned the highest Q-score possible for now.  
