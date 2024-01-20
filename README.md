@@ -2,7 +2,7 @@
 
 ### Synthetically Engineered Wastewater sequence data for Assessing Genomic Entities
 
-SEWAGE is a tool for generating reproducible sequence data representing a heterogeneous population of closely related species at various proportions. Specifically, it was designed to mirror wastewater sequencing data that uses a tiled-amplicon PCR approaches resulting in a mixed SARS-CoV-2 population derived from a wastewater sample.
+SEWAGE is a tool for generating reproducible *in silico* sequence data representing a heterogeneous population of closely related species at various proportions. Specifically, it was designed to mirror wastewater sequencing data that uses a tiled-amplicon PCR approaches resulting in a mixed SARS-CoV-2 population derived from a wastewater sample.
 
 SEWAGE generates amplicons using a tiled-amplicon approach for each SARS-CoV-2 genome from a set of primers and then creates short-read paired-end data (fastq files) resembeling a heterogeneous populations of closely related species at various proportions which mimics wastewater sequence data.
 
