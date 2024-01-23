@@ -171,4 +171,8 @@ class GenomeProporitons():
         random_list = [val / total_sum for val in random_list]
         random.shuffle(random_list)
         self.proportions_dict = dict(zip(reference_genomes_keys, random_list))
+
+    def map_proportions_to_df(self, df):
+        df['proportion'] = df['reference_defline'].map(self.proportions_dict)
+        return df
         

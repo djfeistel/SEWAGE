@@ -85,18 +85,15 @@ def main():
         else:
             proportionUtilsInstance.dvoc_proportions_random_genome_assignment()
 
-    proportions_dict = proportionUtilsInstance.get_proportions_dict()
-
-    if not proportions_dict:
-        raise ValueError("No primers found")
+    #proportions_dict = proportionUtilsInstance.get_proportions_dict()
+    df_amplicon = proportionUtilsInstance.map_proportions_to_df(df_amplicon)
     
     ### generate reads utilities ###
 
     readGeneratorUtilsInstance = read_generator_utils.ReadGenerator(
-        df_amplicon=df_amplicon, 
-        proportion_dict=proportions_dict,
+        df_amplicon=df_amplicon,
         fastq_name=file_prefix_name,
-        propotion_file_name=file_prefix_name,
+        file_prefix_name=file_prefix_name,
         read_length=read_length,
         frag_length=frag_length,
         coverage_depth=coverage_depth,
@@ -107,7 +104,7 @@ def main():
 
     df_reads = readGeneratorUtilsInstance.get_df_reads()
     
-    ### save results ###
+    # # ### save results ###
     
     storageUtilsInstance = storage_utils.StorageUtils(
         storage_dir=storage_dir, 
@@ -122,6 +119,7 @@ def main():
     argsparse_opts.write_parameters_log(args=args, file_prefix_name=file_prefix_name, storage_pathway=storage_pathway)
     fastaUtilsInstance.write_reference_fasta(storage_pathway=storage_pathway)
     ampliconUtilsInstance.save_amplicon_fasta(storage_pathway=storage_pathway)
+    ampliconUtilsInstance.save_amplicon_meta_data(storage_pathway=storage_pathway)
     readGeneratorUtilsInstance.write_fastq_files(storage_pathway=storage_pathway)
     readGeneratorUtilsInstance.save_read_df(storage_pathway=storage_pathway)
     
