@@ -15,6 +15,7 @@ SEWAGE currently offers SARS-CoV2 [ARTIC](https://github.com/artic-network/prime
 2. no INDELs (yet)
 3. estimated depth of coverage > input coverage depth bc of tiled amplicon approach. primers are not removed from amplicions (but the option will be available)
 4. Amplicon dropout only occurs if one or both primers are not found in reference sequence (but option for regional drop out will soon be available)
+5. Short-read paired end only (for now)
 ## Dependencies
 ```
 numpy
