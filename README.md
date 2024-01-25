@@ -143,27 +143,20 @@ All files listed above are named with default settings and can be modified using
 
 ## Discussion 
 ### Comments about generating amplicons:
-Generating amplcions is perfrom similarly to the [in_silico_PCR.pl](https://github.com/egonozer/in_silico_pcr) tool. For each primer set, both the forward and reverse primer must be found in a reference sequence in order for amplification to occur; i.e., a single nucleotide mismatch between the reference sequence and a primer sequence results in a non-amplification event. Thus, if at least one primer is missing, the amplicion will not be 'amplified' for that primer and there will be no defline in the ```SEWAGE_amplicons.fasta``` file.  However the ```SEWAGE_metadata.tsv``` file will indicate which primers did not amplify by stating the primer name followed by "No Amplification" in the **amplicon_sequence** column.  
-
-### Comments about generating proportions
-By default, the ```--proportion_model``` flag is set to ```r``` or random. For a more refined proporiton, users can set ```--proportion_model d``` which assigns a single genome at random as the dominant variant of concern (dVOC) at a 0.8 default proporiton, and the proportion can be modified using the ```--dVOC_proporiton``` flag. Users can also use the ```--dVOC_genome``` flag to assign which genome is the dVOC (full defline in original reference fasta as of now). By setting the ```--proportion_seed``` flag, users can reproduce proportions.
+For each primer pair in a set, both the forward and reverse primer must be found in a reference sequence in order for amplification to occur; i.e., a single nucleotide mismatch between the reference sequence and a primer sequence results in a non-amplification event. That is to say, if one primer cannot 'anneal', then that amplicion will not amplified for that primer pair and there will be no defline in the ```SEWAGE_amplicons.fasta``` file.  However, the ```SEWAGE_amplicon.tsv``` file will indicate which primers did not produce amplicons by stating the primer name followed by "No Amplification" in the **amplicon_sequence** column. Generating amplcions is perfrom similarly to the [in_silico_PCR.pl](https://github.com/egonozer/in_silico_pcr) tool.  
 
 ### Comments about generating reads
-Default parameters when using the ```minimal usage``` command have been optimized to result in 150bp F/R reads form 300bp fragments at a total depth of coverage of approximatly 500X between all reference sequences supplied (NOTE: estimated depth of coverage will result in higher coverage due to overlaping regions of tiled amplicons when using defult settings). Furthermore, there are no qualitye scores other than 40 assotiated with bases (as of now). 
-When parameters are adjusted, users are recommended to manually inspect values in the **SEWAGE_metadata.tsv** file for the proporitons, total number of fragments generated per ampicon, and the length of reads, and any other *in silico* data before running any downstream analyses (adjust accordingly to the experiment).  
-Users can modify the length of reads with vi the ```--read_length``` flag and length of fragments with the ```--frag_length``` flag to mimic different sequencing platforms (e.g. 75bp, 150bp, 250bp, etc...).
+Default parameters when using the ```minimal usage``` command have been optimized to result in 150bp F/R reads form 300bp fragments at a total depth of coverage of approximatly 500X between all reference sequences supplied (NOTE: estimated depth of coverage will result in higher coverage due to overlaping regions of tiled amplicons when using defult settings). When **Read generator options** are adjusted, users are recommended to manually inspect values in the **SEWAGE_metadata.tsv** file for the proporitons, total number of fragments generated per ampicon, the length of reads, etc... and any other *in silico* data before running any downstream analyses.  
 
-### Additional Notes
-**NOTE:** Reads are assigned the highest Q-score possible for now.  
-**NOTE:** Only "short-read" fastq data is available as of now. I am activly working on adding long read output data.
+### Additional Notes 
+**NOTE:** Only "short-read" fastq data is available as of now. I am activly working on adding long read output data. There is probaly some way to modify the paramters to achieve amplicon long reads using the **vsl1a** scheme. If so please let me know!  
 
 ### Future Additions:
-1. Fragments pulled from normal distribution with std for variable read lengths 
-2. Quality scores assigned to bases for high and low quality
-3. INDELS addedd 
-4. Long Read 
+1. Variation in fragement and read length
+3. Mutaitons and indel additions 
+4. Long Read simulations
 5. Conda package
-6. Possibly adding adapters to ends of smaller sequences?
+6. Remove primers from amplicons prior generating reads
 
 ## LICENSE
 SEWAGE
