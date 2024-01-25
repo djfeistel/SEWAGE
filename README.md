@@ -36,6 +36,7 @@ Minimal Usage: SEWAGE -i <multi.fasta> -s <scheme>
 Using the ```Minimal Usage``` command is the simplest way to generate amplicons and short-read paired-end *in silico* data. If you prefer to run this and move one, refer to the **Output** section below for more detail.  
 
 If you prefer to have more control over the output data, here are a few helpful commands explaining what most flags perfrom.  
+### Output options
 ```
 SEWAGE --file_prefix_name <prefix_name> --storage_dir <sotrage_dir_name> --time_stamp -i <multi.fasta> -s <scheme>
 ```
@@ -44,7 +45,11 @@ The ```--file_prefix_name``` flag will attached a prefix to the begining of all 
 ```
 SEWAGE  --proportion_model {r,e,d} --dVOC_genome <> --dVOC_proporiton <> --proportion_seed <> -i <multi.fasta> -s <scheme>
 ```
-When using the ```--proportion_model``` flag, there are three options: **random** or ```r``` will randomly assign proportions to the reference genomes (this model is the default), **equal** or ```e``` will assign equal proprtions across all refreence gneomes, and **dominante variant of concern (dVOC)** or ```d``` will randomly choose one reference genome and assign a 0.8 proporiton as the default. When the model is set to ```d```, you can modify the default value with ```--dVOC_proporiton```. Depending on how mnay reference genomes used, the actual proportion may differet slightly from the assigned proporion. To assign a reference genome with the dVOC proporiton, use the ```--dVOC_genome``` flag. Note that, as of now, you must supply the complete defline found in the reference fasta file in order to assing it as the dVOC.
+When using the ```--proportion_model``` flag, there are three options: **random** or ```r``` will randomly assign proportions to the reference genomes (this model is the default), **equal** or ```e``` will assign equal proprtions across all refreence gneomes, and **dominante variant of concern (dVOC)** or ```d``` will randomly choose one reference genome and assign a 0.8 proporiton as the default. When the model is set to ```d```, you can modify the default value with ```--dVOC_proporiton```. Depending on how mnay reference genomes used, the actual proportion may differet slightly from the assigned proporion. To assign a reference genome with the dVOC proporiton, use the ```--dVOC_genome``` flag. Note that, as of now, you must supply the complete defline found in the reference fasta file in order to assing it as the dVOC.  
+
+```
+
+```
 
 Help Menu:
 ```
@@ -64,7 +69,7 @@ Input and Scheme Parameters:
   -s STR, --scheme STR  Available primer scheme: Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"] VarSkip: Long read = ["vsl1a"]; Short-read =
                         ["vss1a", "vss2a", "vss2b"])
 
-Output naming:
+Output options:
 
   -n STR, --file_prefix_name STR
                         File name prefix for all generated data [default="SEWAGE"]
