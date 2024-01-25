@@ -29,8 +29,8 @@ SEWAGE -i <multi.fasta> -s <scheme>
 ```
 Help Menu:
 ```
-usage: SEWAGE [-h] -i STR -s STR [-n STR] [-o STR] [-t] [-p {r,e,d}] [-dg STR] [-dp FLOAT] [-ps INT] [-rl INT]
-              [-fl INT] [-cd INT] [-rs INT]
+usage: SEWAGE [-h] -i STR -s STR [-n STR] [-o STR] [-t] [-p {r,e,d}] [-dg STR] [-dp FLOAT] [-ps INT] [-rl INT] [-fl INT] [-cd INT] [-rs INT]
+              [-m INT INT] [-sd INT] [-bp INT] [-red INT]
 
 Synthetically Engineered Wastewater sequence data for Assessing Genomic Entities
 
@@ -42,8 +42,8 @@ Input and Scheme Parameters:
 
   -i STR, --infasta STR
                         Multifasta file or single column list of pathways to fasta files
-  -s STR, --scheme STR  Available primer scheme: Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"] VarSkip:
-                        Long read = ["vsl1a"]; Short-read = ["vss1a", "vss2a", "vss2b"])
+  -s STR, --scheme STR  Available primer scheme: Artic = ["V1", "V2", "V3", "V4", "V4.1", "V5.3.2"] VarSkip: Long read = ["vsl1a"]; Short-read =
+                        ["vss1a", "vss2a", "vss2b"])
 
 Output naming:
 
@@ -56,8 +56,7 @@ Output naming:
 Proportion options:
 
   -p {r,e,d}, --proportion_model {r,e,d}
-                        Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads
-                        [default: r]
+                        Generate equal (e), random (r), or dominate (d) variant of concern proportions of reads [default: r]
   -dg STR, --dVOC_genome STR
                         Name of dVOC. NOTE: name of dVOC must match the defline of the reference fasta file
   -dp FLOAT, --dVOC_proporiton FLOAT
@@ -68,15 +67,24 @@ Proportion options:
 Read generator options:
 
   -rl INT, --read_length INT
-                        Read length in bp (value should not exceed amplicon length or will workflow fail)
-                        [default: 150]
+                        Read length in bp (value should not exceed amplicon length or will workflow fail) [default: 150]
   -fl INT, --frag_length INT
-                        Fragment length in bp (value should not exceed amplicon length or will workflow fail)
-                        [default: 300]
+                        Fragment length in bp (value should not exceed amplicon length or will workflow fail) [default: 300]
   -cd INT, --coverage_depth INT
                         Total sequence depth coverage for each fastq file [default: 500]
   -rs INT, --read_seed INT
                         Random seed number for reproducing reads [default: 13]
+
+Read generator options:
+
+  -m INT INT, --min_max_q INT INT
+                        Minimum and Maximum mean range quality scores [default: 30 40]
+  -sd INT, --std_dev_q INT
+                        Standard deviation for quality scores [default: 3]
+  -bp INT, --startup_effect_bp INT
+                        Number of bp's at the begining of a read that have reduced quality [default: 10]
+  -red INT, --startup_effect_q_reduction INT
+                        Quality score reduction for '-bp' (maximum mean minus '-red') [default: 4]
 
 Minimal Usage: SEWAGE -i <multi.fasta> -s <scheme>
 ```
