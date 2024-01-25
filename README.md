@@ -156,7 +156,7 @@ Default parameters when using the ```minimal usage``` command have been optimize
 3. Mutaitons and indel additions 
 4. Long Read simulations
 5. Conda package
-6. Remove primers from amplicons prior generating reads
+6. Remove primers from amplicons prior generating reads  
 
 ## LICENSE
 SEWAGE
