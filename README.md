@@ -42,14 +42,17 @@ SEWAGE --file_prefix_name <prefix_name> --storage_dir <sotrage_dir_name> --time_
 ```
 The ```--file_prefix_name``` flag will attached a prefix to the begining of all files generated in the main workflow. Use ```--storage_dir``` to give a name or a pathway to where the data is stored in the current working directory (if the directory exists then the code terminates). The ```--time_stamp``` flag will append the date and time as **YYYMMDD_HHMMSS** to the end of the directoy.  
 
+### Proportion options
 ```
-SEWAGE  --proportion_model {r,e,d} --dVOC_genome <> --dVOC_proporiton <> --proportion_seed <> -i <multi.fasta> -s <scheme>
+SEWAGE  --proportion_model {r,e,d} --dVOC_genome <defline> --dVOC_proporiton <FLOAT> --proportion_seed <INT> -i <multi.fasta> -s <scheme>
 ```
-When using the ```--proportion_model``` flag, there are three options: **random** or ```r``` will randomly assign proportions to the reference genomes (this model is the default), **equal** or ```e``` will assign equal proprtions across all refreence gneomes, and **dominante variant of concern (dVOC)** or ```d``` will randomly choose one reference genome and assign a 0.8 proporiton as the default. When the model is set to ```d```, you can modify the default value with ```--dVOC_proporiton```. Depending on how mnay reference genomes used, the actual proportion may differet slightly from the assigned proporion. To assign a reference genome with the dVOC proporiton, use the ```--dVOC_genome``` flag. Note that, as of now, you must supply the complete defline found in the reference fasta file in order to assing it as the dVOC.  
+When using the ```--proportion_model``` flag, there are three options: **random** or ```r``` will randomly assign proportions to the reference genomes (this model is the default), **equal** or ```e``` will assign equal proprtions across all refreence gneomes, and **dominante variant of concern (dVOC)** or ```d``` will randomly choose one reference genome and assign a 0.8 proporiton as the default. When the model is set to ```d```, you can modify the default value with ```--dVOC_proporiton```. Depending on how mnay reference genomes used, the actual proportion may differet slightly from the assigned proporion. To assign a reference genome with the dVOC proporiton, use the ```--dVOC_genome``` flag. Note that, as of now, you must supply the complete defline found in the reference fasta file in order to assing it as the dVOC. Set the ```--proportion_seed``` flag to reproduce results (default 13).  
 
+### Read generator options
 ```
-
+SEWAGE  --read_length <INT> --frag_length <INT> --coverage_depth <INT> --read_seed INT -i <multi.fasta> -s <scheme>
 ```
+User can modify the default values for ```--read_length``` and ```--frag_length```. Note that there is no variation in read/fragment length in this algorithm as of now i.e., all reads/fragments will be the size supplied. Increasing/decreasing the ```--coverage_depth``` will produce more or less reads. Set the ```--read_seed``` flag to reproduce results (default 13)
 
 Help Menu:
 ```
@@ -99,7 +102,7 @@ Read generator options:
   -rs INT, --read_seed INT
                         Random seed number for reproducing reads [default: 13]
 
-Read generator options:
+Quality score options:
 
   -m INT INT, --min_max_q INT INT
                         Minimum and Maximum mean range quality scores [default: 30 40]
