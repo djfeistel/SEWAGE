@@ -42,9 +42,6 @@ SEWAGE --file_prefix_name <prefix_name> --storage_dir <sotrage_dir_name> --time_
 ```
 The ```--file_prefix_name``` flag will attached a prefix to the begining of all files generated in the main workflow. Use ```--storage_dir``` to give a name or a pathway to where the data is stored in the current working directory (if the directory exists then the code terminates). The ```--time_stamp``` flag will append the date and time as **YYYMMDD_HHMMSS** to the end of the directoy.  
 
-### Comments about generating amplicons:
-For each primer set, both the forward and reverse primer must be found in a reference sequence in order for amplification to occur; i.e., a single nucleotide mismatch between the reference sequence and a primer sequence results in a non-amplification event. Thus, if at least one primer is missing, the amplicion will not be 'amplified' for that primer and there will be no defline in the ```SEWAGE_amplicons.fasta``` file.  However the ```SEWAGE_metadata.tsv``` file will indicate which primers did not amplify by stating the primer name followed by "No Amplification" in the **amplicon_sequence** column.  
-
 ### Proportion options
 ```
 SEWAGE  --proportion_model {r,e,d} --dVOC_genome <defline> --dVOC_proporiton <FLOAT> --proportion_seed <INT> -i <multi.fasta> -s <scheme>
@@ -144,6 +141,9 @@ From the code above, results will be stored in a directory called ```SEWAGE_Work
 
 All files listed above are named with default settings and can be modified using the either the ```--file_prefix_name``` flag to change the prefix for all other files listed above. Refer to **Usage** seciton from detailed inforamtoin on flag usage.  
 
+## Discussion 
+### Comments about generating amplicons:
+For each primer set, both the forward and reverse primer must be found in a reference sequence in order for amplification to occur; i.e., a single nucleotide mismatch between the reference sequence and a primer sequence results in a non-amplification event. Thus, if at least one primer is missing, the amplicion will not be 'amplified' for that primer and there will be no defline in the ```SEWAGE_amplicons.fasta``` file.  However the ```SEWAGE_metadata.tsv``` file will indicate which primers did not amplify by stating the primer name followed by "No Amplification" in the **amplicon_sequence** column.  
 
 ### Comments about generating proportions
 By default, the ```--proportion_model``` flag is set to ```r``` or random. For a more refined proporiton, users can set ```--proportion_model d``` which assigns a single genome at random as the dominant variant of concern (dVOC) at a 0.8 default proporiton, and the proportion can be modified using the ```--dVOC_proporiton``` flag. Users can also use the ```--dVOC_genome``` flag to assign which genome is the dVOC (full defline in original reference fasta as of now). By setting the ```--proportion_seed``` flag, users can reproduce proportions.
