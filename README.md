@@ -52,7 +52,13 @@ When using the ```--proportion_model``` flag, there are three options: **random*
 ```
 SEWAGE  --read_length <INT> --frag_length <INT> --coverage_depth <INT> --read_seed INT -i <multi.fasta> -s <scheme>
 ```
-User can modify the default values for ```--read_length``` and ```--frag_length```. Note that there is no variation in read/fragment length in this algorithm as of now i.e., all reads/fragments will be the size supplied. Increasing/decreasing the ```--coverage_depth``` will produce more or less reads. Set the ```--read_seed``` flag to reproduce results (default 13)
+User can modify the default values for ```--read_length``` and ```--frag_length```. Note that there is no variation in read/fragment length in this algorithm as of now i.e., all reads/fragments will be the size supplied. Increasing/decreasing the ```--coverage_depth``` will produce more or less reads. Set the ```--read_seed``` flag to reproduce results (default 13).  
+
+### Quality score options
+```
+SEWAGE  --min_max_q < INT INT> --std_dev_q <INT> --startup_effect_bp <INT> --startup_effect_q_reduction <INT> -i <multi.fasta> -s <scheme>
+```
+Setting the ```--min_max_q``` with two integers between 0-40 will give the minimum and maximum Phred qualitiy scores (Q). The ```--std_dev_q``` flag sets the standard deviation at which those values are randomly selected to produced variation in the Q-scores. Modifying the ```--startup_effect_bp``` flag sets the number of base pairs at the begining of a read that have slighly decreased quality relative to the rest of the reads due to the initial cycle effect, and the ```--startup_effect_q_reduction``` changed the magnatude of that reduction (default 4; MAX(Q) - 4 = startup_effect_bp). Note: these parematers do not output data the align perfectly with real data, though it shows similarites.  Even though Q-scores are assigned, no mutaitons or indels are introduced into any reads. Thus, the Q-scores do not directly effect the *in silico* data.  
 
 Help Menu:
 ```
