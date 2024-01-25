@@ -11,9 +11,10 @@ SEWAGE currently provides two main functionalities:
 SEWAGE currently offers SARS-CoV2 [ARTIC](https://github.com/artic-network/primer-schemes) and [VarSkip](https://github.com/nebiolabs/VarSkip) primer sets for creating amplicions.
 
 ### SEWAGE caveats
-1. no variation in read length
-2. no INDELs
-3. estimated depth of coverage > input coverage depth bc of tiled amplicon approach. primers are not removed from amplicion but may be in future version of SEWAGE
+1. no variation in read length (yet)
+2. no INDELs (yet)
+3. estimated depth of coverage > input coverage depth bc of tiled amplicon approach. primers are not removed from amplicions (but the option will be available)
+4. Amplicon dropout only occurs if one or both primers are not found in reference sequence (but option for regional drop out will soon be available)
 ## Dependencies
 ```
 numpy
