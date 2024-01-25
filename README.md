@@ -143,7 +143,7 @@ All files listed above are named with default settings and can be modified using
 
 ## Discussion 
 ### Comments about generating amplicons:
-For each primer set, both the forward and reverse primer must be found in a reference sequence in order for amplification to occur; i.e., a single nucleotide mismatch between the reference sequence and a primer sequence results in a non-amplification event. Thus, if at least one primer is missing, the amplicion will not be 'amplified' for that primer and there will be no defline in the ```SEWAGE_amplicons.fasta``` file.  However the ```SEWAGE_metadata.tsv``` file will indicate which primers did not amplify by stating the primer name followed by "No Amplification" in the **amplicon_sequence** column.  
+Generating amplcions is perfrom similarly to the [in_silico_PCR.pl](https://github.com/egonozer/in_silico_pcr) tool. For each primer set, both the forward and reverse primer must be found in a reference sequence in order for amplification to occur; i.e., a single nucleotide mismatch between the reference sequence and a primer sequence results in a non-amplification event. Thus, if at least one primer is missing, the amplicion will not be 'amplified' for that primer and there will be no defline in the ```SEWAGE_amplicons.fasta``` file.  However the ```SEWAGE_metadata.tsv``` file will indicate which primers did not amplify by stating the primer name followed by "No Amplification" in the **amplicon_sequence** column.  
 
 ### Comments about generating proportions
 By default, the ```--proportion_model``` flag is set to ```r``` or random. For a more refined proporiton, users can set ```--proportion_model d``` which assigns a single genome at random as the dominant variant of concern (dVOC) at a 0.8 default proporiton, and the proportion can be modified using the ```--dVOC_proporiton``` flag. Users can also use the ```--dVOC_genome``` flag to assign which genome is the dVOC (full defline in original reference fasta as of now). By setting the ```--proportion_seed``` flag, users can reproduce proportions.
@@ -164,3 +164,20 @@ Users can modify the length of reads with vi the ```--read_length``` flag and le
 4. Long Read 
 5. Conda package
 6. Possibly adding adapters to ends of smaller sequences?
+
+## LICENSE
+SEWAGE
+Copyright (C) 2024 Dorian J. Feistel
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
