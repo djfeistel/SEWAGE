@@ -23,10 +23,6 @@ pandas
 ```
 
 ## Usage
-Minimal Usage:  
-```
-SEWAGE -i <multi.fasta> -s <scheme>
-```
 Help Menu:
 ```
 usage: SEWAGE [-h] -i STR -s STR [-n STR] [-o STR] [-t] [-p {r,e,d}] [-dg STR] [-dp FLOAT] [-ps INT] [-rl INT] [-fl INT] [-cd INT] [-rs INT]
@@ -88,7 +84,14 @@ Read generator options:
 
 Minimal Usage: SEWAGE -i <multi.fasta> -s <scheme>
 ```
-### Output:
+Using the ```Minimal Usage``` command is the simplest way to generate amplicons and short-read paired-end *in silico* data. If you prefer to run this and move one, refer to the **Output** section below for more detail.  
+If you prefer to have more control over the output data, here are a few helpful commands explaining what most flags perfrom.  
+```
+SEWAGE --file_prefix_name <prefix_name> --storage_dir <sotrage_dir_name> --time_stamp -i <multi.fasta> -s <scheme>
+```
+The ```--file_prefix_name``` flag will attached a prefix to the begining of all files generated in the main workflow. Use ```--storage_dir``` to give a name or a pathway to where the data is stored in the current working directory (if the directory exists then the code terminates). The ```--time_stamp``` flag will append the date and time as **YYYMMDD_HHMMSS** to the end of the directoy.
+
+## Output
 
 Assuming Minimal Usage ```SEWAGE -i <multi.fasta> -s <scheme>```
 
