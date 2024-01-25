@@ -16,6 +16,7 @@ SEWAGE currently offers SARS-CoV2 [ARTIC](https://github.com/artic-network/prime
 3. estimated depth of coverage > input coverage depth bc of tiled amplicon approach. primers are not removed from amplicions (but the option will be available)
 4. Amplicon dropout only occurs if one or both primers are not found in reference sequence (but option for regional drop out will soon be available)
 5. Short-read paired end only (for now)
+6. deflines renamed to genome_1, genome_2 for dVOCname? but deflines stay the same in results files
 ## Dependencies
 ```
 numpy
@@ -32,7 +33,13 @@ If you prefer to have more control over the output data, here are a few helpful 
 ```
 SEWAGE --file_prefix_name <prefix_name> --storage_dir <sotrage_dir_name> --time_stamp -i <multi.fasta> -s <scheme>
 ```
-The ```--file_prefix_name``` flag will attached a prefix to the begining of all files generated in the main workflow. Use ```--storage_dir``` to give a name or a pathway to where the data is stored in the current working directory (if the directory exists then the code terminates). The ```--time_stamp``` flag will append the date and time as **YYYMMDD_HHMMSS** to the end of the directoy.
+The ```--file_prefix_name``` flag will attached a prefix to the begining of all files generated in the main workflow. Use ```--storage_dir``` to give a name or a pathway to where the data is stored in the current working directory (if the directory exists then the code terminates). The ```--time_stamp``` flag will append the date and time as **YYYMMDD_HHMMSS** to the end of the directoy.  
+
+```
+SEWAGE  --proportion_model {r,e,d} --dVOC_genome <> --dVOC_proporiton <> --proportion_seed <> -i <multi.fasta> -s <scheme>
+```
+When using the ```--proportion_model``` flag, there are three options: **random** or ```r``` will randomly assign proportions to the reference genomes (this model is the default), **equal** or ```e``` will assign equal proprtions across all refreence gneomes, and **dominante variant of concern (dVOC)** or ```d``` will randomly choose one reference genome and assign a 0.8 proporiton as the default. When the model is set to ```d```, you can modify the default value with ```--dVOC_proporiton```. Depending on how mnay reference genomes used, the actual proportion may differet slightly from the assigned proporion. To assign a reference genome with the dVOC proporiton, use the ```--dVOC_genome``` flag. Note that, as of now, you must supply the complete defline found in the reference fasta file in order to assing it as the dVOC.
+
 Help Menu:
 ```
 usage: SEWAGE [-h] -i STR -s STR [-n STR] [-o STR] [-t] [-p {r,e,d}] [-dg STR] [-dp FLOAT] [-ps INT] [-rl INT] [-fl INT] [-cd INT] [-rs INT]
