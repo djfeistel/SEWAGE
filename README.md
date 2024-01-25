@@ -27,6 +27,7 @@ pandas
 Minimal Usage: SEWAGE -i <multi.fasta> -s <scheme>
 ```
 Using the ```Minimal Usage``` command is the simplest way to generate amplicons and short-read paired-end *in silico* data. If you prefer to run this and move one, refer to the **Output** section below for more detail.  
+
 If you prefer to have more control over the output data, here are a few helpful commands explaining what most flags perfrom.  
 ```
 SEWAGE --file_prefix_name <prefix_name> --storage_dir <sotrage_dir_name> --time_stamp -i <multi.fasta> -s <scheme>
