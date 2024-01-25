@@ -22,7 +22,13 @@ SEWAGE currently offers SARS-CoV2 [ARTIC](https://github.com/artic-network/prime
 numpy
 pandas
 ```
-
+## Workflow
+1. Load reference fasta file
+2. Generate amplicons
+3. Assign proporitons
+4. Calculate number of reads per amplicon per reference genomes based on coverage
+5. Write fastq R1 and R2 files
+6. Save all metadata assotiated with generatign amplicons and reads.
 ## Usage
 ```
 Minimal Usage: SEWAGE -i <multi.fasta> -s <scheme>
