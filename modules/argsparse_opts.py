@@ -30,7 +30,7 @@ def sewage_opts():
         default=None
     )
     # output options #
-    output_pathway = parser.add_argument_group("Output naming", "")
+    output_pathway = parser.add_argument_group("Output options", "")
     output_pathway.add_argument(
         '-n', '--file_prefix_name', 
         help='File name prefix for all generated data [default="SEWAGE"]', 
@@ -134,7 +134,7 @@ def sewage_opts():
     #     dest='num_cpus'
     # )
     # Quality Score Parameters
-    q_score_options = parser.add_argument_group("Read generator options", "")
+    q_score_options = parser.add_argument_group("Quality score options", "")
     q_score_options.add_argument(
         "-m", "--min_max_q", 
         help="Minimum and Maximum mean range quality scores [default: 30 40]",
