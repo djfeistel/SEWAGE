@@ -1,8 +1,8 @@
 # SEWAGE 
 
-### Synthetically Engineered Wastewater sequence data for Assessing Genomic Entities
+### <u>S</u>ynthetically <u>E</u>ngineered <u>W</u>astewater sequence data for <u>A</u>ssessing <u>G</u>enomic <u>E</u>ntities
 
-SEWAGE is a tool for generating reproducible *in silico* sequence data representing a heterogeneous population of closely related species at various proportions. Specifically, it was designed to mirror SARS-CoV-2 sequencing data from a wastewater sample representing a heterogeneous population using a tiled-amplicon PCR approaches.
+SEWAGE is a tool for generating reproducible sequence data representing a heterogeneous population of closely related species at various proportions. Specifically, it was designed to mirror wastewater sequencing data that uses a tiled-amplicon PCR approaches resulting in a mixed SARS-CoV-2 population derived from a wastewater sample.
 
 SEWAGE currently provides two main functionalities:
  1. Generate amplicons from a set of primers using a tiled-amplicon approach for each SARS-CoV-2 genome.  
@@ -150,6 +150,8 @@ Default parameters when using the ```minimal usage``` command have been optimize
 
 ### Additional Notes 
 **NOTE:** Only "short-read" fastq data is available as of now. I am activly working on adding long read output data. There is probaly some way to modify the paramters to achieve amplicon long reads using the **vsl1a** scheme. If so please let me know!  
+
+### SEWAGE is always a WIP (Work In Progress)
 
 ### Future Additions:
 1. Variation in fragement and read length
