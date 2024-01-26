@@ -3,7 +3,8 @@ import pandas as pd
 import os
 import sys
 import time
-
+import multiprocessing
+from functools import partial
 #from modules.quality_scores_util_workshop import quailty_scores_generator_array
 
 class ReadGenerator():
@@ -19,7 +20,8 @@ class ReadGenerator():
             min_max_q:list=[30,40],
             std_dev_q:int=3,
             startup_effect_bp:int=10,
-            startup_effect_q_reduction:int=4
+            startup_effect_q_reduction:int=4,
+            num_cpus:int=1
     ):
         self.df_amplicon = df_amplicon.reset_index(drop=True)
         self.fastq_name = fastq_name
@@ -32,7 +34,8 @@ class ReadGenerator():
         self.std_dev_q = std_dev_q
         self.startup_effect_bp = startup_effect_bp
         self.startup_effect_q_reduction = startup_effect_q_reduction
-
+        total_cpus = multiprocessing.cpu_count()
+        self.num_cpus = num_cpus if num_cpus < total_cpus else (total_cpus - 1)
 
     def get_df_reads(self):
         return self.df_reads
@@ -135,6 +138,24 @@ class ReadGenerator():
         complement_strand = ''.join(complement_strand_list)
         return complement_strand[::-1]
     
+    def parallel_apply(self, df, func):
+        bound_func = partial(func, self)
+        with multiprocessing.Pool(processes=self.num_cpus) as pool:
+            # Split the DataFrame into chunks and apply the function in parallel
+            split_dfs = np.array_split(df, self.num_cpus)
+            results = pool.map(bound_func, split_dfs)
+        # Concatenate the results back into a single DataFrame
+        return pd.concat(results)
+    
+    
+    def generate_fragment_indices_wrapper(self, df_chunk):
+        return df_chunk.apply(self.generate_random_fragment_indicies_new, axis=1, result_type='expand')
+
+    
+    def slice_fragments_wrapper(self, df_chunk):
+        return df_chunk.apply(self.slice_fragments_into_reads, axis=1, result_type='expand')
+
+
     def create_reads_workflow(self):
         #start_time = time.time()
         self.calculate_total_frags_to_cover_amplicon()
@@ -143,8 +164,10 @@ class ReadGenerator():
         self.create_df_reads()
         self.drop_irrelevant_columns_from_df_reads()
         self.add_read_number() # add in amplicon section later
-        self.df_reads[['fragment_start', 'fragment_end']] = self.df_reads.apply(self.generate_random_fragment_indicies_new, axis=1, result_type='expand')
-        self.df_reads[['R1_read', 'R2_read']] = self.df_reads.apply(self.slice_fragments_into_reads, axis=1, result_type='expand')
+        #self.df_reads[['fragment_start', 'fragment_end']] = self.df_reads.apply(self.generate_random_fragment_indicies_new, axis=1, result_type='expand')
+        self.df_reads[['fragment_start', 'fragment_end']] = self.parallel_apply(self.df_reads, self.generate_fragment_indices_wrapper)
+        #self.df_reads[['R1_read', 'R2_read']] = self.df_reads.apply(self.slice_fragments_into_reads, axis=1, result_type='expand')
+        self.df_reads[['R1_read', 'R2_read']] = self.parallel_apply(self.df_reads, self.slice_fragments_wrapper)
         R1_q, R2_q = self.quailty_scores_generator_array()
         self.df_reads['R1_q'] = R1_q
         self.df_reads['R2_q'] = R2_q

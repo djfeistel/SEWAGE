@@ -25,7 +25,7 @@ class GenerateAmplicons:
         self.scheme_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "schemes")
         
     def get_df_amplicon(self):
-        return self.df_amplicion
+        return self.df_amplicion.reset_index(drop=True)
         
     @staticmethod
     def reverse_complimentary_sequence(sequence: str) -> str:
@@ -93,7 +93,7 @@ class GenerateAmplicons:
                 return [forward_index_start, reverse_index_end]
 
     def create_amplicon_dataframe(self) -> pd.DataFrame:
-        '''find amplicions and return a pandas df'''
+        '''find amplicons and return a pandas DataFrame'''
         if self.scheme in self.short_read_schemes:
             primer_indices_function = self.primer_short_read_index
         elif self.scheme in self.long_read_schemes:
@@ -101,46 +101,39 @@ class GenerateAmplicons:
         else:
             raise ValueError("Unknown scheme")
         
-        amplicon_dict = {
-            "reference_defline": [],
-            "primer_scheme": [],
-            "primer_name": [],
-            "start": [],
-            "end": [],
-            "amplicon_length_bp": [],
-            "amplicon_sequence": []
-        }
-        
+        # Preallocate DataFrame structure
+        amplicon_data = []
+
         self.scheme_primer_dictionary()
         for reference_defline, reference_sequence in self.reference_fasta_dict.items():
             for primer_name, primer_sequences in self.primer_dict.items():
-                forward_primer = primer_sequences[0]
-                reverse_primer = primer_sequences[1]
+                forward_primer, reverse_primer = primer_sequences
 
                 index_amplicon_list = primer_indices_function(reference_sequence=reference_sequence, 
-                                                      forward_primer=forward_primer, 
-                                                      reverse_primer=reverse_primer)
+                                                    forward_primer=forward_primer, 
+                                                    reverse_primer=reverse_primer)
                 if not index_amplicon_list:
-                    start, end = np.nan, np.nan 
-                    amplicion = "No Amplification"
-                    amplicion_length = np.nan
+                    start, end = pd.NA, pd.NA 
+                    amplicon = "No Amplification"
+                    amplicon_length = 0
                 else:
                     start, end = [int(x) for x in index_amplicon_list]
-                    amplicion = reference_sequence[start:end]
-                    amplicion_length = int(len(amplicion))
+                    amplicon = reference_sequence[start:end]
+                    amplicon_length = int(len(amplicon))
+                    # remove the primers from the ends of the amplicon 
+                    # to avoid higher coverages at the end 
+                    # perahps make that a flag?
                 
-                amplicon_dict["reference_defline"].append(reference_defline)
-                amplicon_dict["primer_scheme"].append(self.scheme)
-                amplicon_dict["primer_name"].append(primer_name)
-                amplicon_dict["start"].append(start)
-                amplicon_dict["end"].append(end)
-                amplicon_dict["amplicon_length_bp"].append(amplicion_length)
-                amplicon_dict["amplicon_sequence"].append(amplicion)
-        
-        self.df_amplicion = pd.DataFrame(amplicon_dict).sort_values(by=['reference_defline', 'start'])
-        convert_cols_to_int = ['start', 'end', 'amplicon_length_bp']
-        # use Int64 when encountering np.nan
-        self.df_amplicion[convert_cols_to_int] = self.df_amplicion[convert_cols_to_int].apply(lambda x: x.astype('Int64'))
+                # Collect data in a tuple
+                amplicon_data.append((reference_defline, self.scheme, primer_name, forward_primer, reverse_primer, start, end, amplicon_length, amplicon))
+
+        # Create DataFrame from collected data
+        column_names = ["reference_defline", "primer_scheme", "primer_name", "forward_primer", "reverse_primer", "start", "end", "amplicon_length_bp", "amplicon_sequence"]
+        self.df_amplicion = pd.DataFrame(amplicon_data, columns=column_names).sort_values(by=['reference_defline', 'start'])
+
+        # Optimize data types
+        convert_cols_to_int = ['amplicon_length_bp']
+        self.df_amplicion[convert_cols_to_int] = self.df_amplicion[convert_cols_to_int].astype('int64')
         
     def save_amplicon_meta_data(self, storage_pathway):
         metadata_file_name = f"{self.file_prefix_name}_amplicons.tsv"

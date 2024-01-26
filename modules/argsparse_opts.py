@@ -30,7 +30,7 @@ def sewage_opts():
         default=None
     )
     # output options #
-    output_pathway = parser.add_argument_group("Output naming", "")
+    output_pathway = parser.add_argument_group("Output options", "")
     output_pathway.add_argument(
         '-n', '--file_prefix_name', 
         help='File name prefix for all generated data [default="SEWAGE"]', 
@@ -124,7 +124,51 @@ def sewage_opts():
         default=13,
         type=int,
         dest='read_seed'
+    ) #num_cpus
+    # read_options.add_argument(
+    #     "-cpus", "--num_cpus", 
+    #     help="Number of CPUs for parallel processing (max CPUs allowed are (total_cpus - 1)) [default: 1]",
+    #     metavar='INT',
+    #     default=1,
+    #     type=int,
+    #     dest='num_cpus'
+    # )
+    # Quality Score Parameters
+    q_score_options = parser.add_argument_group("Quality score options", "")
+    q_score_options.add_argument(
+        "-m", "--min_max_q", 
+        help="Minimum and Maximum mean range quality scores [default: 30 40]",
+        nargs=2,
+        metavar=('INT', 'INT'),
+        default=[30, 40],
+        type=int,
+        dest='min_max_q'
     )
+    q_score_options.add_argument(
+        "-sd", "--std_dev_q", 
+        help="Standard deviation for quality scores [default: 3]",
+        metavar='INT',
+        default=3,
+        type=int,
+        dest='std_dev_q'
+    )
+    q_score_options.add_argument(
+        "-bp", "--startup_effect_bp", 
+        help="Number of bp's at the begining of a read that have reduced quality [default: 10]",
+        metavar='INT',
+        default=10,
+        type=int,
+        dest='startup_effect_bp'
+    )
+    q_score_options.add_argument(
+        "-red", "--startup_effect_q_reduction", 
+        help="Quality score reduction for '-bp' (maximum mean minus '-red') [default: 4]",
+        metavar='INT',
+        default=4,
+        type=int,
+        dest='startup_effect_q_reduction'
+    )
+    
     args = parser.parse_args()
     return args
 
