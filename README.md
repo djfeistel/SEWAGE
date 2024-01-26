@@ -151,6 +151,8 @@ Default parameters when using the ```minimal usage``` command have been optimize
 ### Additional Notes 
 **NOTE:** Only "short-read" fastq data is available as of now. I am activly working on adding long read output data. There is probaly some way to modify the paramters to achieve amplicon long reads using the **vsl1a** scheme. If so please let me know!  
 
+### SEWAGE is always a WIP (Work In Progress)
+
 ### Future Additions:
 1. Variation in fragement and read length
 3. Mutaitons and indel additions 
