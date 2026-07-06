@@ -2,14 +2,7 @@
 
 **S**imulated **E**mulation of **W**astewater-**A**bundance **G**enome **E**nsembles
 
-```
-   .-==-.       _____ _______       _____   ____________         \ | /
-  /::||::\     / ___// ____/ |     / /   | / ____/ ____/.     .--(#)--.
- |::-##-::|    \__ \/ __/..| |./| / / /| |/ / __/ __/....    -(  ###  )-
-  \::||::/    ___/ / /___. | |/ |/ / ___ / /_/ / /___.        '--(#)--'
-   '-==-'    /____/_____/. |__/|__/_/ .|_\____/_____/.           / | \
-              ............  ..........  ..............
-```
+![SEWAGE](assets/sewage_logo.png)
 
 SEWAGE simulates paired-end, wastewater-like FASTQ data for a defined mixture
 of viral lineages. It is wired directly to a local clone of the
@@ -188,6 +181,103 @@ DENV1-01-SEWAGE,illumina,/path/DENV1_sample_R1.fastq.gz,/path/DENV1_sample_R2.fa
 4. Simulate whole-genome paired-end reads per lineage, with each lineage
    contributing read pairs in proportion to its abundance.
 5. Write gzipped R1/R2 FASTQ plus the proportions manifest.
+
+---
+
+## Full help menu
+
+Complete output of `./sewage.py -h`:
+
+```
+   .-==-.       _____ _______       _____   ____________         \ | /
+  /::||::\     / ___// ____/ |     / /   | / ____/ ____/.     .--(#)--.
+ |::-##-::|    \__ \/ __/..| |./| / / /| |/ / __/ __/....    -(  ###  )-
+  \::||::/    ___/ / /___. | |/ |/ / ___ / /_/ / /___.        '--(#)--'
+   '-==-'    /____/_____/. |__/|__/_/ .|_\____/_____/.           / | \
+              ............  ..........  ..............
+        Simulated Emulation of Wastewater-Abundance Genome Ensembles
+
+usage: sewage [-h] [-p PATHOGEN] [--repo REPO] [--version VERSION] [--list]
+              [--list-lineages] [-i PROPORTIONS] [--generate-proportions]
+              [--num-lineages NUM_LINEAGES]
+              [--prop-mode {equal,dominant,random}]
+              [--dominant-fraction DOMINANT_FRACTION]
+              [--proportions-out PROPORTIONS_OUT] [--depth DEPTH]
+              [--num-pairs NUM_PAIRS] [--read-length READ_LENGTH]
+              [--fragment-mean FRAGMENT_MEAN] [--fragment-sd FRAGMENT_SD]
+              [--error-rate ERROR_RATE] [-o OUTPUT_PREFIX] [--gzip]
+              [--no-gzip] [--gzip-level GZIP_LEVEL] [--seed SEED] [--timing]
+
+SEWAGE (Simulated Emulation of Wastewater-Abundance
+Genome Ensembles): simulate paired-end wastewater-like
+FASTQ for a mixture of viral lineages, using
+references/barcodes from a local Freyja-barcodes clone.
+
+options:
+  -h, --help            show this help message and exit
+  -p PATHOGEN, --pathogen PATHOGEN
+                        Pathogen name as it appears in the Freyja-barcodes
+                        repo (e.g. DENV4, MPX, RSVa, MEASLESgenome). (default:
+                        None)
+  --repo REPO           Path to the Freyja-barcodes repository. (default:
+                        /home/ofx5/GENOME_PROPORTION_GENERATOR/SEWAGE/Freyja-
+                        barcodes)
+  --version VERSION     Barcode version subfolder to use (e.g. latest or a
+                        date like 2025-05-01). (default: latest)
+  --list                List available pathogens in the repo and exit.
+                        (default: False)
+  --list-lineages       List available lineages for --pathogen and exit.
+                        (default: False)
+  -i PROPORTIONS, --proportions PROPORTIONS
+                        CSV/TSV file: column 1 = lineage, column 2 =
+                        proportion. Lineages must exist in the barcode file.
+                        (default: None)
+  --generate-proportions
+                        Auto-generate the proportions table instead of
+                        supplying one. Prompts if --num-lineages/--prop-mode
+                        are not given. (default: False)
+  --num-lineages NUM_LINEAGES
+                        (generate) Number of lineages to include. (default:
+                        None)
+  --prop-mode {equal,dominant,random}
+                        (generate) Proportion scheme. (default: None)
+  --dominant-fraction DOMINANT_FRACTION
+                        (generate, dominant mode) Fraction for the dominant
+                        lineage (default: random in [0.5, 0.8]). (default:
+                        None)
+  --proportions-out PROPORTIONS_OUT
+                        Where to save the (generated or used) proportions
+                        table. Default: <output_prefix>.proportions.tsv
+                        (default: None)
+  --depth DEPTH         Target fold coverage depth for the whole sample. Read
+                        pairs are derived from genome length and read length.
+                        (default: None)
+  --num-pairs NUM_PAIRS
+                        Total number of read PAIRS for the whole sample.
+                        (default: None)
+  --read-length READ_LENGTH
+                        Length of each mate. (default: 250)
+  --fragment-mean FRAGMENT_MEAN
+                        Mean fragment (insert) size. (default: 500.0)
+  --fragment-sd FRAGMENT_SD
+                        Std. dev. of fragment size. (default: 50.0)
+  --error-rate ERROR_RATE
+                        Per-base sequencing error rate (0 to disable).
+                        (default: 0.005)
+  -o OUTPUT_PREFIX, --output-prefix OUTPUT_PREFIX
+                        Prefix for output FASTQ files (<prefix>_R1.fastq.gz /
+                        <prefix>_R2.fastq.gz). (default: sim_sample)
+  --gzip                Gzip the FASTQ output (default). (default: True)
+  --no-gzip             Write plain (uncompressed) FASTQ. (default: True)
+  --gzip-level GZIP_LEVEL
+                        gzip compression level 1-9. Lower is much faster with
+                        slightly larger files; 9 (Python's default) is the
+                        slowest and a common bottleneck for big outputs.
+                        (default: 6)
+  --seed SEED           Random seed for reproducibility. (default: None)
+  --timing              Print elapsed wall-time per phase (genome build, read
+                        simulation) to expose bottlenecks. (default: False)
+```
 
 ---
 
