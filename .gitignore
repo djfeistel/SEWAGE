@@ -21,6 +21,7 @@ data.old/
 *.fastq.gz
 *.proportions.tsv
 sim_sample*
+*_sewage/
 
 # OS / editor
 .DS_Store

@@ -639,29 +639,48 @@ def write_qc_plots(qc_dir, prefix, coverage, rlen_counts, ref_name,
     plt.close(fig)
     written.append(cov_path)
 
-    # 3) FastQC-style per-base sequence quality box-and-whisker plot.
+    # 3) FastQC-style per-base sequence quality box-and-whisker plot. Positions
+    # are binned exactly like FastQC: the first 9 bases are individual, then
+    # bases are grouped in blocks of 5 (10-14, 15-19, 20-24, ...).
     if qual_hist is not None and qual_hist.sum() > 0:
         qb_path = os.path.join(qc_dir, f"{prefix}.per_base_quality.png")
         rlp, nq = qual_hist.shape
         qvals = np.arange(nq)
-        stats = []
-        for pos in range(rlp):
-            col = qual_hist[pos]
-            total = int(col.sum())
+
+        # Build the (start, end) 0-based position bins.
+        bins = []
+        i = 0
+        while i < rlp:
+            if i < 9:                       # bases 1-9: one box each
+                bins.append((i, i))
+                i += 1
+            else:                           # then blocks of 5
+                j = min(i + 5, rlp) - 1
+                bins.append((i, j))
+                i = j + 1
+
+        def bin_stats(counts, label):
+            total = int(counts.sum())
             if total == 0:
-                stats.append(dict(label="", med=0, q1=0, q3=0,
-                                  whislo=0, whishi=0, fliers=[]))
-                continue
-            cdf = np.cumsum(col)
+                return dict(label=label, med=0, q1=0, q3=0,
+                            whislo=0, whishi=0, fliers=[])
+            cdf = np.cumsum(counts)
 
             def pct(p):
                 idx = int(np.searchsorted(cdf, p / 100.0 * total, side="left"))
                 return int(qvals[min(idx, nq - 1)])
 
-            stats.append(dict(label="", med=pct(50), q1=pct(25), q3=pct(75),
-                              whislo=pct(10), whishi=pct(90), fliers=[]))
+            return dict(label=label, med=pct(50), q1=pct(25), q3=pct(75),
+                        whislo=pct(10), whishi=pct(90), fliers=[])
 
-        fig, ax = plt.subplots(figsize=(min(24, max(10, rlp * 0.06)), 6))
+        stats, labels = [], []
+        for start, end in bins:
+            label = str(start + 1) if start == end else f"{start + 1}-{end + 1}"
+            labels.append(label)
+            stats.append(bin_stats(qual_hist[start:end + 1].sum(axis=0), label))
+
+        nbins = len(bins)
+        fig, ax = plt.subplots(figsize=(min(28, max(10, nbins * 0.28)), 6))
         # FastQC-style background quality bands (poor / OK / good).
         ax.axhspan(0, 20, facecolor="#f2d5d5", zorder=0)   # red
         ax.axhspan(20, 28, facecolor="#f2eccf", zorder=0)  # orange
@@ -672,11 +691,9 @@ def write_qc_plots(qc_dir, prefix, coverage, rlen_counts, ref_name,
                medianprops=dict(color="#c53030", linewidth=1.0, zorder=4),
                whiskerprops=dict(color="black", linewidth=0.5, zorder=3),
                capprops=dict(color="black", linewidth=0.5, zorder=3))
-        step = max(1, rlp // 25)
-        ticks = list(range(1, rlp + 1, step))
-        ax.set_xticks(ticks)
-        ax.set_xticklabels([str(t) for t in ticks])
-        ax.set_xlim(0.5, rlp + 0.5)
+        ax.set_xticks(range(1, nbins + 1))
+        ax.set_xticklabels(labels, rotation=90, fontsize=7)
+        ax.set_xlim(0.5, nbins + 0.5)
         ax.set_ylim(0, nq)
         ax.set_xlabel("Position in read (bp)")
         ax.set_ylabel("Phred quality score")
@@ -768,7 +785,8 @@ def build_parser():
                         "lineage (default: random in [0.5, 0.8]).")
     g_prop.add_argument("--proportions-out",
                    help="Where to save the (generated or used) proportions "
-                        "table. Default: <output_prefix>.proportions.tsv")
+                        "table. Default: <output_prefix>_sewage/"
+                        "<prefix>.proportions.tsv")
 
     # --- Sequencing depth --------------------------------------------------
     g_depth = p.add_argument_group(
@@ -819,8 +837,9 @@ def build_parser():
         "output",
         "FASTQ output location, compression, and reproducibility.")
     g_out.add_argument("-o", "--output-prefix", default="sim_sample",
-                   help="Prefix for output FASTQ files "
-                        "(<prefix>_R1.fastq.gz / <prefix>_R2.fastq.gz).")
+                   help="Prefix for outputs. All files for the run go into a "
+                        "folder named <prefix>_sewage/ (FASTQ, manifest, and "
+                        "any QC plots).")
     g_out.add_argument("--gzip", dest="gzip", action="store_true", default=True,
                    help="Gzip the FASTQ output (default).")
     g_out.add_argument("--no-gzip", dest="gzip", action="store_false",
@@ -843,7 +862,7 @@ def build_parser():
                         "matplotlib.")
     g_qc.add_argument("--qc-dir",
                    help="Folder for the QC plots when --qc-plots is set. "
-                        "Default: <output_prefix>_qc")
+                        "Default: <output_prefix>_sewage/<prefix>_qc")
     g_qc.add_argument("--timing", action="store_true",
                    help="Print elapsed wall-time per phase (genome build, "
                         "read simulation) to expose bottlenecks.")
@@ -906,9 +925,15 @@ def main(argv=None):
 
     pairs = normalize(pairs)
 
+    # All outputs for a run live in one parent folder: <output_prefix>_sewage/.
+    # File names inside it use just the prefix basename.
+    out_dir = f"{args.output_prefix}_sewage"
+    os.makedirs(out_dir, exist_ok=True)
+    out_base = os.path.basename(args.output_prefix)
+
     # Save the proportions table used (for tracking / reuse).
     prop_out = (args.proportions_out
-                or f"{args.output_prefix}.proportions.tsv")
+                or os.path.join(out_dir, f"{out_base}.proportions.tsv"))
     write_proportions_file(prop_out, pairs)
 
     # --- Build lineage genomes ---------------------------------------------
@@ -944,8 +969,8 @@ def main(argv=None):
     else:
         opener = open
     suffix = ".fastq.gz" if args.gzip else ".fastq"
-    r1_path = f"{args.output_prefix}_R1{suffix}"
-    r2_path = f"{args.output_prefix}_R2{suffix}"
+    r1_path = os.path.join(out_dir, f"{out_base}_R1{suffix}")
+    r2_path = os.path.join(out_dir, f"{out_base}_R2{suffix}")
 
     print("SEWAGE - Simulated Emulation of Wastewater-Abundance Genome Ensembles")
     print(f"Pathogen : {args.pathogen} ({args.version})")
@@ -1006,16 +1031,16 @@ def main(argv=None):
             fh.write(f"{name}\t{prop:.6f}\t{counts[name]}\n")
 
     print(f"\nWrote {total_written} read pairs")
+    print(f"  output folder: {out_dir}/")
     print(f"  R1: {r1_path}")
     print(f"  R2: {r2_path}")
     print(f"  proportions/manifest: {prop_out}")
 
     # --- QC plots -----------------------------------------------------------
     if args.qc_plots:
-        qc_dir = args.qc_dir or f"{args.output_prefix}_qc"
+        qc_dir = args.qc_dir or os.path.join(out_dir, f"{out_base}_qc")
         coverage = np.cumsum(cov_diff)[:glen]  # diff array -> per-base depth
-        qc_prefix = os.path.basename(args.output_prefix)
-        qc_files = write_qc_plots(qc_dir, qc_prefix, coverage, rlen_counts,
+        qc_files = write_qc_plots(qc_dir, out_base, coverage, rlen_counts,
                                   ref_name, qual_hist=qual_hist)
         print(f"  QC plots ({qc_dir}):")
         for f in qc_files:

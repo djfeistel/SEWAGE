@@ -39,8 +39,9 @@ a **known ground-truth mixture** of lineages.
 - Fast, `numpy`-vectorized read generation; gzip output by default.
 - Writes a manifest of the exact realized proportions and read-pair counts.
 - Optional QC plots (`--qc-plots`): read-length histogram, per-base
-  depth-of-coverage line plot, and a FastQC-style per-base quality boxplot,
-  written as PNGs into a folder.
+  depth-of-coverage line plot, and a FastQC-style per-base quality boxplot
+  (positions 1-9 individual, then binned in groups of 5), written as PNGs into
+  a folder.
 
 ---
 
@@ -116,21 +117,23 @@ with an error naming the missing lineage(s).
 
 ## Output
 
-For `-o sample` (gzip on by default):
+Every run writes into a single parent folder named `<output_prefix>_sewage/`.
+For `-o sample` (gzip on by default), that folder `sample_sewage/` contains:
 
 | File | Description |
 |------|-------------|
-| `sample_R1.fastq.gz` | Forward reads |
-| `sample_R2.fastq.gz` | Reverse reads (reverse-complemented mates) |
-| `sample.proportions.tsv` | Manifest: requested proportion + realized read-pair count per lineage |
+| `sample_sewage/sample_R1.fastq.gz` | Forward reads |
+| `sample_sewage/sample_R2.fastq.gz` | Reverse reads (reverse-complemented mates) |
+| `sample_sewage/sample.proportions.tsv` | Manifest: requested proportion + realized read-pair count per lineage |
 
-With `--qc-plots`, a QC folder (default `sample_qc/`) is also written:
+With `--qc-plots`, a QC subfolder (default `sample_sewage/sample_qc/`) is also
+written:
 
 | File | Description |
 |------|-------------|
-| `sample_qc/sample.read_length_hist.png` | Histogram of read lengths produced |
-| `sample_qc/sample.coverage.png` | Per-base depth of coverage across the genome (line plot) |
-| `sample_qc/sample.per_base_quality.png` | FastQC-style per-base quality box-and-whisker plot |
+| `sample_sewage/sample_qc/sample.read_length_hist.png` | Histogram of read lengths produced |
+| `sample_sewage/sample_qc/sample.coverage.png` | Per-base depth of coverage across the genome (line plot) |
+| `sample_sewage/sample_qc/sample.per_base_quality.png` | FastQC-style per-base quality box-and-whisker plot (first 9 bases individual, then binned in groups of 5) |
 
 Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 
@@ -157,7 +160,7 @@ Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 | `--num-lineages` | (generate) Number of lineages to include. | prompt |
 | `--prop-mode` | (generate) `equal`, `dominant`, or `random`. | prompt |
 | `--dominant-fraction` | (generate, dominant) Fraction for the dominant lineage. | random in [0.5, 0.8] |
-| `--proportions-out` | Where to save the used/generated proportions table. | `<prefix>.proportions.tsv` |
+| `--proportions-out` | Where to save the used/generated proportions table. | `<prefix>_sewage/<prefix>.proportions.tsv` |
 | `--depth` | Target fold coverage for the whole sample. | — |
 | `--num-pairs` | Total number of read **pairs** for the whole sample. | — |
 | `--read-length` | Length of each mate. | `250` |
@@ -167,12 +170,12 @@ Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 | `--quality-profile` | Base-quality model: `flat` (constant) or `illumina` (declines/widens toward 3'). | `flat` |
 | `--quality-start` / `--quality-end` | (illumina) Mean Phred quality at the 5' / 3' end. | `38` / `30` |
 | `--quality-sd-start` / `--quality-sd-end` | (illumina) Quality std. dev. at the 5' / 3' end. | `1` / `8` |
-| `-o`, `--output-prefix` | Prefix for output FASTQ files. | `sim_sample` |
+| `-o`, `--output-prefix` | Prefix for outputs; all files go into `<prefix>_sewage/`. | `sim_sample` |
 | `--gzip` / `--no-gzip` | Gzip the FASTQ output (on by default). | gzip |
 | `--gzip-level` | gzip compression level 1–9 (lower = faster). | `6` |
 | `--seed` | Random seed for reproducibility. | — |
 | `--qc-plots` | Generate QC PNGs (read-length histogram, depth-of-coverage line plot, per-base quality boxplot) into a folder. Requires matplotlib. | off |
-| `--qc-dir` | Folder for the QC plots when `--qc-plots` is set. | `<prefix>_qc` |
+| `--qc-dir` | Folder for the QC plots when `--qc-plots` is set. | `<prefix>_sewage/<prefix>_qc` |
 | `--timing` | Print per-phase wall-time to expose bottlenecks. | off |
 
 > **Note:** `--depth` and `--num-pairs` are mutually exclusive — provide exactly one.
@@ -306,8 +309,8 @@ lineage proportions:
                         None)
   --proportions-out PROPORTIONS_OUT
                         Where to save the (generated or used) proportions
-                        table. Default: <output_prefix>.proportions.tsv
-                        (default: None)
+                        table. Default: <output_prefix>_sewage/
+                        <prefix>.proportions.tsv (default: None)
 
 sequencing depth:
   Specify exactly one of --depth or --num-pairs.
@@ -360,8 +363,9 @@ output:
   FASTQ output location, compression, and reproducibility.
 
   -o OUTPUT_PREFIX, --output-prefix OUTPUT_PREFIX
-                        Prefix for output FASTQ files (<prefix>_R1.fastq.gz /
-                        <prefix>_R2.fastq.gz). (default: sim_sample)
+                        Prefix for outputs. All files for the run go into a
+                        folder named <prefix>_sewage/ (FASTQ, manifest, and
+                        any QC plots). (default: sim_sample)
   --gzip                Gzip the FASTQ output (default). (default: True)
   --no-gzip             Write plain (uncompressed) FASTQ. (default: True)
   --gzip-level GZIP_LEVEL
@@ -379,7 +383,8 @@ QC & diagnostics:
                         base quality boxplot) into a folder. Requires
                         matplotlib. (default: False)
   --qc-dir QC_DIR       Folder for the QC plots when --qc-plots is set.
-                        Default: <output_prefix>_qc (default: None)
+                        Default: <output_prefix>_sewage/<prefix>_qc (default:
+                        None)
   --timing              Print elapsed wall-time per phase (genome build, read
                         simulation) to expose bottlenecks. (default: False)
 ```
