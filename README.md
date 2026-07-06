@@ -393,5 +393,4 @@ QC & diagnostics:
 
 ## License
 
-Released under the [MIT License](LICENSE). Update the copyright holder in
-`LICENSE` to your name/organization before publishing.
+Released under the [MIT License](LICENSE).
