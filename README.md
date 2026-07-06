@@ -5,12 +5,13 @@
 ![SEWAGE](assets/sewage_logo.png)
 
 SEWAGE simulates paired-end, wastewater-like FASTQ data for a defined mixture
-of viral lineages. It is wired directly to a local clone of the
-[Freyja-barcodes](https://github.com/andersen-lab/Freyja-barcodes) repository:
-you supply a **pathogen name** and a table of **lineage proportions**, and
-SEWAGE pulls the reference genome and the lineage/mutation barcode matrix from
-the repo automatically, builds a full genome per lineage, and emits reads so
-that each lineage contributes in proportion to its requested abundance.
+of viral lineages. The reference genomes and lineage/mutation barcodes come from
+the [Freyja-barcodes](https://github.com/andersen-lab/Freyja-barcodes) project,
+but that data is **bundled inside SEWAGE** (the `data/` folder) — you never have
+to clone it yourself. You supply a **pathogen name** and a table of **lineage
+proportions**, and SEWAGE builds a full genome per lineage and emits reads so
+that each lineage contributes in proportion to its requested abundance. Run
+`./sewage.py --update` at any time to refresh the bundled data from upstream.
 
 This is useful for benchmarking wastewater relative-abundance callers such as
 [Freyja](https://github.com/andersen-lab/Freyja), where you need FASTQ data with
@@ -20,9 +21,10 @@ a **known ground-truth mixture** of lineages.
 
 ## Features
 
-- Pulls references/barcodes straight from a local `Freyja-barcodes` clone — no
-  manual FASTA/VCF wrangling.
-- Works for any pathogen present in the repo (DENV1–4, MPX, RSVa/RSVb, MEASLES,
+- **Self-contained barcode data** bundled under `data/` — no separate clone
+  needed. `--update` downloads the latest upstream repo and rebuilds the local
+  data (all pathogens, `latest` + dated versions), adding any new pathogens.
+- Works for any pathogen present in the data (DENV1–4, MPX, RSVa/RSVb, MEASLES,
   influenza segments, MTB, etc.).
 - Builds each lineage's genome by applying **all** barcode mutations flagged for
   that lineage (IUPAC ambiguity codes resolved to a concrete alt base).
@@ -31,39 +33,44 @@ a **known ground-truth mixture** of lineages.
 - Coverage controlled by fold-**depth** (`--depth`) or absolute **read-pair
   count** (`--num-pairs`).
 - Configurable read length, fragment size distribution, and per-base error rate.
+- Optional **realistic base-quality model** (`--quality-profile illumina`):
+  per-base Phred scores whose mean declines and variance widens toward the 3'
+  end (the default `flat` profile keeps constant quality).
 - Fast, `numpy`-vectorized read generation; gzip output by default.
 - Writes a manifest of the exact realized proportions and read-pair counts.
-- Optional QC plots (`--qc-plots`): read-length histogram and a per-base
-  depth-of-coverage line plot, written as PNGs into a folder.
+- Optional QC plots (`--qc-plots`): read-length histogram, per-base
+  depth-of-coverage line plot, and a FastQC-style per-base quality boxplot,
+  written as PNGs into a folder.
 
 ---
 
 ## Requirements
 
 - Python **3.8+** (developed on 3.12)
-- [`numpy`](https://numpy.org/) (only external dependency)
-- A local clone of the **Freyja-barcodes** repository
+- [`numpy`](https://numpy.org/) (core dependency)
+- [`matplotlib`](https://matplotlib.org/) (optional, only for `--qc-plots`)
 
-Install the Python dependency:
+Install the Python dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Clone the barcode repository (anywhere you like):
+The barcode data ships bundled in `data/`. If it is missing (or you want the
+latest), download/rebuild it — no manual clone required:
 
 ```bash
-git clone https://github.com/andersen-lab/Freyja-barcodes.git
+./sewage.py --update
 ```
 
-SEWAGE finds the barcode repo, in order of precedence:
+SEWAGE finds the barcode data, in order of precedence:
 
-1. the `--repo /path/to/Freyja-barcodes` flag,
+1. the `--repo /path/to/data` flag,
 2. the `FREYJA_BARCODES` environment variable,
-3. a `Freyja-barcodes/` folder sitting next to `sewage.py`.
+3. the bundled `data/` folder sitting next to `sewage.py`.
 
 ```bash
-export FREYJA_BARCODES=/path/to/Freyja-barcodes
+export FREYJA_BARCODES=/path/to/data   # optional override
 ```
 
 ---
@@ -71,7 +78,10 @@ export FREYJA_BARCODES=/path/to/Freyja-barcodes
 ## Quick start
 
 ```bash
-# 1. See which pathogens are available in your barcode clone
+# 0. (once) Download / refresh the bundled barcode data
+./sewage.py --update
+
+# 1. See which pathogens are available in the bundled data
 ./sewage.py --list
 
 # 2. See which lineages exist for a pathogen
@@ -120,6 +130,7 @@ With `--qc-plots`, a QC folder (default `sample_qc/`) is also written:
 |------|-------------|
 | `sample_qc/sample.read_length_hist.png` | Histogram of read lengths produced |
 | `sample_qc/sample.coverage.png` | Per-base depth of coverage across the genome (line plot) |
+| `sample_qc/sample.per_base_quality.png` | FastQC-style per-base quality box-and-whisker plot |
 
 Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 
@@ -133,11 +144,14 @@ Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `-p`, `--pathogen` | Pathogen name as it appears in the repo (e.g. `DENV4`, `MPX`, `RSVa`). | — |
-| `--repo` | Path to the Freyja-barcodes repository. | `$FREYJA_BARCODES` or `./Freyja-barcodes` |
+| `-p`, `--pathogen` | Pathogen name as it appears in the data (e.g. `DENV4`, `MPX`, `RSVa`). | — |
+| `--repo` | Path to the bundled barcode data directory. | `$FREYJA_BARCODES` or bundled `data/` |
 | `--version` | Barcode version subfolder (e.g. `latest` or a date). | `latest` |
 | `--list` | List available pathogens and exit. | — |
 | `--list-lineages` | List available lineages for `--pathogen` and exit. | — |
+| `--update` | Download the latest upstream repo and rebuild the bundled data, then exit. | — |
+| `--update-repo` | GitHub `owner/name` to pull barcode data from. | `andersen-lab/Freyja-barcodes` |
+| `--update-branch` | Branch of the barcode repo to pull. | `main` |
 | `-i`, `--proportions` | CSV/TSV proportions file (`lineage,proportion`). | — |
 | `--generate-proportions` | Auto-generate proportions instead of supplying a file. | — |
 | `--num-lineages` | (generate) Number of lineages to include. | prompt |
@@ -149,12 +163,15 @@ Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 | `--read-length` | Length of each mate. | `250` |
 | `--fragment-mean` | Mean fragment (insert) size. | `500` |
 | `--fragment-sd` | Std. dev. of fragment size. | `50` |
-| `--error-rate` | Per-base sequencing error rate (`0` disables). | `0.005` |
+| `--error-rate` | Per-base sequencing error rate (`0` disables; `flat` profile only). | `0.005` |
+| `--quality-profile` | Base-quality model: `flat` (constant) or `illumina` (declines/widens toward 3'). | `flat` |
+| `--quality-start` / `--quality-end` | (illumina) Mean Phred quality at the 5' / 3' end. | `38` / `30` |
+| `--quality-sd-start` / `--quality-sd-end` | (illumina) Quality std. dev. at the 5' / 3' end. | `1` / `8` |
 | `-o`, `--output-prefix` | Prefix for output FASTQ files. | `sim_sample` |
 | `--gzip` / `--no-gzip` | Gzip the FASTQ output (on by default). | gzip |
 | `--gzip-level` | gzip compression level 1–9 (lower = faster). | `6` |
 | `--seed` | Random seed for reproducibility. | — |
-| `--qc-plots` | Generate QC PNGs (read-length histogram + depth-of-coverage line plot) into a folder. Requires matplotlib. | off |
+| `--qc-plots` | Generate QC PNGs (read-length histogram, depth-of-coverage line plot, per-base quality boxplot) into a folder. Requires matplotlib. | off |
 | `--qc-dir` | Folder for the QC plots when `--qc-plots` is set. | `<prefix>_qc` |
 | `--timing` | Print per-phase wall-time to expose bottlenecks. | off |
 
@@ -184,9 +201,9 @@ DENV1-01-SEWAGE,illumina,/path/DENV1_sample_R1.fastq.gz,/path/DENV1_sample_R2.fa
 
 ## How it works
 
-1. Resolve `<repo>/<PATHOGEN>/<version>/{reference.fasta, barcode.csv}`.
-   Barcode columns are mutation tokens like `A10019T` (ref `A` → alt `T` at
-   1-based position `10019`); cells are `0.0` / `1.0`.
+1. Resolve `<data>/<PATHOGEN>/<version>/{reference.fasta, barcode.csv}` from the
+   bundled `data/` folder. Barcode columns are mutation tokens like `A10019T`
+   (ref `A` → alt `T` at 1-based position `10019`); cells are `0.0` / `1.0`.
 2. Read or generate the desired lineage proportions and normalize them.
 3. Build a full genome per lineage by applying every mutation flagged for that
    lineage to the reference (there are no indels in these barcodes, so genomes
@@ -211,37 +228,65 @@ Complete output of `./sewage.py -h`:
         Simulated Emulation of Wastewater-Abundance Genome Ensembles
 
 usage: sewage [-h] [-p PATHOGEN] [--repo REPO] [--version VERSION] [--list]
-              [--list-lineages] [-i PROPORTIONS] [--generate-proportions]
-              [--num-lineages NUM_LINEAGES]
+              [--list-lineages] [--update] [--update-repo UPDATE_REPO]
+              [--update-branch UPDATE_BRANCH] [-i PROPORTIONS]
+              [--generate-proportions] [--num-lineages NUM_LINEAGES]
               [--prop-mode {equal,dominant,random}]
               [--dominant-fraction DOMINANT_FRACTION]
               [--proportions-out PROPORTIONS_OUT] [--depth DEPTH]
               [--num-pairs NUM_PAIRS] [--read-length READ_LENGTH]
               [--fragment-mean FRAGMENT_MEAN] [--fragment-sd FRAGMENT_SD]
-              [--error-rate ERROR_RATE] [-o OUTPUT_PREFIX] [--gzip]
+              [--error-rate ERROR_RATE] [--quality-profile {flat,illumina}]
+              [--quality-start QUALITY_START] [--quality-end QUALITY_END]
+              [--quality-sd-start QUALITY_SD_START]
+              [--quality-sd-end QUALITY_SD_END] [-o OUTPUT_PREFIX] [--gzip]
               [--no-gzip] [--gzip-level GZIP_LEVEL] [--seed SEED] [--qc-plots]
               [--qc-dir QC_DIR] [--timing]
 
 SEWAGE (Simulated Emulation of Wastewater-Abundance
 Genome Ensembles): simulate paired-end wastewater-like
-FASTQ for a mixture of viral lineages, using
-references/barcodes from a local Freyja-barcodes clone.
+FASTQ for a mixture of viral lineages, using bundled
+references/barcodes (refresh with --update).
 
 options:
   -h, --help            show this help message and exit
+
+reference / pathogen selection:
+  Choose the pathogen and the Freyja-barcodes source to build from.
+
   -p PATHOGEN, --pathogen PATHOGEN
                         Pathogen name as it appears in the Freyja-barcodes
                         repo (e.g. DENV4, MPX, RSVa, MEASLESgenome). (default:
                         None)
-  --repo REPO           Path to the Freyja-barcodes repository. (default:
-                        /home/ofx5/GENOME_PROPORTION_GENERATOR/SEWAGE/Freyja-
-                        barcodes)
+  --repo REPO           Path to the bundled barcode data directory. Defaults
+                        to the data/ folder shipped with SEWAGE (populated by
+                        --update); override or set FREYJA_BARCODES to use a
+                        different location. (default: <SEWAGE>/data)
   --version VERSION     Barcode version subfolder to use (e.g. latest or a
                         date like 2025-05-01). (default: latest)
   --list                List available pathogens in the repo and exit.
                         (default: False)
   --list-lineages       List available lineages for --pathogen and exit.
                         (default: False)
+
+data management:
+  Manage the bundled Freyja-barcodes data (references + barcodes).
+
+  --update              Download the latest upstream barcode repo and rebuild
+                        the local bundled data (all pathogens, latest + dated
+                        versions), then exit. Only reference.fasta and
+                        barcode.csv files are kept; new pathogens are added.
+                        (default: False)
+  --update-repo UPDATE_REPO
+                        GitHub 'owner/name' to pull barcode data from.
+                        (default: andersen-lab/Freyja-barcodes)
+  --update-branch UPDATE_BRANCH
+                        Branch of the barcode repo to pull for --update.
+                        (default: main)
+
+lineage proportions:
+  Supply a proportions table or auto-generate one.
+
   -i PROPORTIONS, --proportions PROPORTIONS
                         CSV/TSV file: column 1 = lineage, column 2 =
                         proportion. Lineages must exist in the barcode file.
@@ -263,12 +308,20 @@ options:
                         Where to save the (generated or used) proportions
                         table. Default: <output_prefix>.proportions.tsv
                         (default: None)
+
+sequencing depth:
+  Specify exactly one of --depth or --num-pairs.
+
   --depth DEPTH         Target fold coverage depth for the whole sample. Read
                         pairs are derived from genome length and read length.
                         (default: None)
   --num-pairs NUM_PAIRS
                         Total number of read PAIRS for the whole sample.
                         (default: None)
+
+read geometry & errors:
+  Read/fragment dimensions and the sequencing error rate.
+
   --read-length READ_LENGTH
                         Length of each mate. (default: 250)
   --fragment-mean FRAGMENT_MEAN
@@ -276,8 +329,36 @@ options:
   --fragment-sd FRAGMENT_SD
                         Std. dev. of fragment size. (default: 50.0)
   --error-rate ERROR_RATE
-                        Per-base sequencing error rate (0 to disable).
+                        Per-base sequencing error rate (0 to disable). Used by
+                        the 'flat' quality profile; ignored by 'illumina',
+                        which derives errors from the per-base quality.
                         (default: 0.005)
+
+base-quality model:
+  How per-base Phred quality scores are generated.
+
+  --quality-profile {flat,illumina}
+                        Base-quality model. 'flat' (default) emits a constant
+                        quality derived from --error-rate. 'illumina' emits
+                        position-dependent qualities whose mean declines and
+                        spread widens toward the 3' end of each read.
+                        (default: flat)
+  --quality-start QUALITY_START
+                        (illumina) Mean Phred quality at the 5' end of reads.
+                        (default: 38.0)
+  --quality-end QUALITY_END
+                        (illumina) Mean Phred quality at the 3' end of reads.
+                        (default: 30.0)
+  --quality-sd-start QUALITY_SD_START
+                        (illumina) Quality std. dev. at the 5' end (narrow).
+                        (default: 1.0)
+  --quality-sd-end QUALITY_SD_END
+                        (illumina) Quality std. dev. at the 3' end (wide).
+                        (default: 8.0)
+
+output:
+  FASTQ output location, compression, and reproducibility.
+
   -o OUTPUT_PREFIX, --output-prefix OUTPUT_PREFIX
                         Prefix for output FASTQ files (<prefix>_R1.fastq.gz /
                         <prefix>_R2.fastq.gz). (default: sim_sample)
@@ -289,8 +370,13 @@ options:
                         slowest and a common bottleneck for big outputs.
                         (default: 6)
   --seed SEED           Random seed for reproducibility. (default: None)
-  --qc-plots            Generate QC PNGs (read-length histogram + per-base
-                        depth-of-coverage line plot) into a folder. Requires
+
+QC & diagnostics:
+  Optional quality-control plots and timing output.
+
+  --qc-plots            Generate QC PNGs (read-length histogram, per-base
+                        depth-of-coverage line plot, and a FastQC-style per-
+                        base quality boxplot) into a folder. Requires
                         matplotlib. (default: False)
   --qc-dir QC_DIR       Folder for the QC plots when --qc-plots is set.
                         Default: <output_prefix>_qc (default: None)

@@ -9,8 +9,12 @@ dist/
 venv/
 env/
 
-# Barcode data (clone separately from andersen-lab/Freyja-barcodes)
+# Legacy external barcode clone (data is now bundled under data/ via --update)
 Freyja-barcodes/
+
+# Transient artifacts from `sewage --update`
+data.old/
+.sewage_data_*/
 
 # Simulated output
 *.fastq

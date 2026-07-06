@@ -4,11 +4,14 @@ SEWAGE - Simulated Emulation of Wastewater-Abundance Genome Ensembles.
 
 Simulate paired-end wastewater-like FASTQ data for a mixture of viral lineages.
 
-The tool is wired directly to a local clone of the Freyja-barcodes repository
-(https://github.com/andersen-lab/Freyja-barcodes). The user only supplies the
-*pathogen name* (as it appears in the repo, e.g. ``DENV4``, ``MPX``, ``RSVa``)
-and a table of lineage proportions; the reference genome and the lineage/mutation
-barcode matrix are pulled from the repo automatically.
+The reference genomes and lineage/mutation barcode matrices come from the
+Freyja-barcodes project (https://github.com/andersen-lab/Freyja-barcodes), but
+that data is *bundled inside SEWAGE* (the ``data/`` folder) so users never have
+to clone it themselves. Run ``sewage --update`` to download the latest upstream
+data and rebuild ``data/`` (all pathogens, ``latest`` plus dated versions; only
+``reference.fasta`` and ``barcode.csv`` are kept). The user only supplies the
+*pathogen name* (as it appears in the data, e.g. ``DENV4``, ``MPX``, ``RSVa``)
+and a table of lineage proportions.
 
 Overview of the pipeline
 ------------------------
@@ -56,12 +59,19 @@ BANNER = r"""
 """
 
 
-# Default location of the Freyja-barcodes clone. Can be overridden with --repo
-# or the FREYJA_BARCODES environment variable.
-DEFAULT_REPO = os.environ.get(
-    "FREYJA_BARCODES",
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "Freyja-barcodes"),
-)
+# Bundled barcode data lives inside the SEWAGE repo itself (data/), so users
+# do NOT have to clone Freyja-barcodes separately. Run ``sewage --update`` to
+# download the latest upstream data and rebuild this folder. --repo or the
+# FREYJA_BARCODES environment variable can point at a different data directory.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(SCRIPT_DIR, "data")
+DEFAULT_REPO = os.environ.get("FREYJA_BARCODES", DATA_DIR)
+
+# Upstream source used by --update and the per-version files worth vendoring
+# (everything else in the repo -- READMEs, HTML, auspice trees -- is skipped).
+UPSTREAM_REPO = "andersen-lab/Freyja-barcodes"
+UPSTREAM_BRANCH = "main"
+KEEP_FILES = ("reference.fasta", "barcode.csv")
 
 # Integer encoding used internally for fast, vectorized read generation.
 BASES = np.frombuffer(b"ACGT", dtype=np.uint8)          # index -> base byte
@@ -84,6 +94,8 @@ MUT_RE = re.compile(r"^([ACGT])(\d+)([ACGTRYSWKMBDHVN])$")
 # --------------------------------------------------------------------------- #
 def list_pathogens(repo):
     """Return the sorted list of pathogen folders that contain a ``latest`` dir."""
+    if not os.path.isdir(repo):
+        return []
     out = []
     for name in sorted(os.listdir(repo)):
         path = os.path.join(repo, name)
@@ -92,11 +104,87 @@ def list_pathogens(repo):
     return out
 
 
+def update_barcodes(data_dir, repo=UPSTREAM_REPO, branch=UPSTREAM_BRANCH):
+    """Download the upstream Freyja-barcodes repo and (re)build ``data_dir``.
+
+    Only per-version ``reference.fasta`` and ``barcode.csv`` files are kept, for
+    every pathogen and every version (``latest`` plus dated folders). New
+    pathogens/versions are added and ones removed upstream disappear locally,
+    so the bundled data mirrors the upstream repo. The data is staged in a
+    temporary directory and atomically swapped into place so an interrupted
+    update never corrupts the existing data. Returns
+    ``(n_pathogens, n_versions, n_files)``.
+    """
+    import io
+    import shutil
+    import tarfile
+    import tempfile
+    import urllib.request
+
+    url = f"https://codeload.github.com/{repo}/tar.gz/refs/heads/{branch}"
+    print(f"Downloading {repo}@{branch} ...")
+    try:
+        with urllib.request.urlopen(url, timeout=180) as resp:
+            raw = resp.read()
+    except Exception as exc:  # network / HTTP errors
+        sys.exit(f"ERROR: failed to download barcode data from {url}\n"
+                 f"       ({exc})")
+    print(f"  downloaded {len(raw) / 1e6:.1f} MB; extracting pathogen files ...")
+
+    data_dir = os.path.abspath(data_dir)
+    parent = os.path.dirname(data_dir) or "."
+    os.makedirs(parent, exist_ok=True)
+    staging = tempfile.mkdtemp(prefix=".sewage_data_", dir=parent)
+
+    pathogens, versions, n_files = set(), set(), 0
+    try:
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tar:
+            for member in tar:
+                if not member.isfile():
+                    continue
+                # Archive layout: "<repo>-<branch>/<PATHOGEN>/<version>/<file>".
+                parts = member.name.split("/")
+                if len(parts) != 4:
+                    continue  # skip top-level and pathogen-level files
+                _root, pathogen, version, fname = parts
+                if fname not in KEEP_FILES:
+                    continue
+                src = tar.extractfile(member)
+                if src is None:
+                    continue
+                dest_dir = os.path.join(staging, pathogen, version)
+                os.makedirs(dest_dir, exist_ok=True)
+                with open(os.path.join(dest_dir, fname), "wb") as out:
+                    shutil.copyfileobj(src, out)
+                n_files += 1
+                pathogens.add(pathogen)
+                versions.add((pathogen, version))
+    except Exception as exc:
+        shutil.rmtree(staging, ignore_errors=True)
+        sys.exit(f"ERROR: failed to extract barcode archive ({exc})")
+
+    if n_files == 0:
+        shutil.rmtree(staging, ignore_errors=True)
+        sys.exit("ERROR: no pathogen barcode files found in the archive; "
+                 "nothing was updated.")
+
+    # Atomic swap: move the current data aside, move staging into place.
+    backup = data_dir + ".old"
+    if os.path.isdir(data_dir):
+        shutil.rmtree(backup, ignore_errors=True)
+        os.rename(data_dir, backup)
+    os.rename(staging, data_dir)
+    shutil.rmtree(backup, ignore_errors=True)
+
+    return len(pathogens), len(versions), n_files
+
+
 def resolve_pathogen_dir(repo, pathogen, version):
     """Resolve and validate the data directory for a pathogen + version."""
     if not os.path.isdir(repo):
-        sys.exit(f"ERROR: Freyja-barcodes repo not found: {repo}\n"
-                 f"       Pass --repo or set FREYJA_BARCODES.")
+        sys.exit(f"ERROR: barcode data not found: {repo}\n"
+                 f"       Run 'sewage --update' to download it, or pass --repo "
+                 f"/ set FREYJA_BARCODES.")
     pdir = os.path.join(repo, pathogen)
     if not os.path.isdir(pdir):
         avail = ", ".join(list_pathogens(repo))
@@ -311,22 +399,47 @@ def build_lineage_genome(ref_ints, muts, rng, warn_prefix=""):
 # --------------------------------------------------------------------------- #
 # Read simulation
 # --------------------------------------------------------------------------- #
+QMAX = 41  # maximum Phred quality emitted (Illumina 1.9-style cap)
+
+
 def phred_char_array(qs):
     """Convert an int quality array to a Phred+33 byte array."""
-    return (np.clip(qs, 0, 40).astype(np.uint8) + 33)
+    return (np.clip(qs, 0, QMAX).astype(np.uint8) + 33)
+
+
+def make_quality(m, rl, profile, qparams, base_q, rng):
+    """Return an (m, rl) int64 array of per-base Phred qualities.
+
+    ``profile`` == "flat" gives a constant quality of ``base_q`` for every base
+    (the original behavior). ``profile`` == "illumina" draws position-dependent
+    qualities: the mean declines and the spread (std. dev.) widens from the 5'
+    end toward the 3' end of the read, mimicking real Illumina data.
+    ``qparams`` is (q_start_mean, q_end_mean, sd_start, sd_end).
+    """
+    if profile != "illumina":
+        return np.full((m, rl), base_q, dtype=np.int64)
+    q_start, q_end, sd_start, sd_end = qparams
+    frac = np.linspace(0.0, 1.0, rl) if rl > 1 else np.zeros(1)
+    mean_q = q_start + (q_end - q_start) * frac        # (rl,) declines to 3'
+    sd_q = sd_start + (sd_end - sd_start) * frac       # (rl,) widens to 3'
+    q = mean_q + sd_q * rng.standard_normal((m, rl))   # broadcast over rows
+    return np.clip(np.round(q), 2, QMAX).astype(np.int64)
 
 
 def simulate_reads(genome, n_pairs, read_len, frag_mean, frag_sd, error_rate,
                    rng, name_prefix, r1_out, r2_out, chunk=100000,
-                   cov_diff=None, rlen_counts=None):
+                   cov_diff=None, rlen_counts=None, quality_profile="flat",
+                   quality_params=None, qual_hist=None):
     """Simulate ``n_pairs`` paired-end reads from one genome, writing FASTQ.
 
     Reads tile the whole genome uniformly. R1 is the forward strand at the
     fragment 5' end; R2 is the reverse-complement at the fragment 3' end.
 
-    If ``cov_diff`` (a length ``glen+1`` int64 difference array) and/or
-    ``rlen_counts`` (a dict of read-length -> count) are supplied, per-base
-    coverage and read-length statistics are accumulated for QC plotting.
+    ``quality_profile`` selects the base-quality model ("flat" or "illumina",
+    see :func:`make_quality`). If ``cov_diff`` (length ``glen+1`` int64 diff
+    array), ``rlen_counts`` (read-length -> count dict), and/or ``qual_hist``
+    (an (rl, QMAX+1) int64 array of per-position quality counts) are supplied,
+    the corresponding QC statistics are accumulated for plotting.
     """
     glen = len(genome)
     if glen == 0 or n_pairs <= 0:
@@ -370,10 +483,20 @@ def simulate_reads(genome, n_pairs, read_len, frag_mean, frag_sd, error_rate,
         # Reverse-complement the R2 region: reverse along read, complement 3-b.
         r2 = 3 - r2_fwd[:, ::-1]
 
-        # Introduce sequencing errors.
-        q1 = np.full((m, rl), base_q, dtype=np.int64)
-        q2 = np.full((m, rl), base_q, dtype=np.int64)
-        if error_rate > 0:
+        # Per-base qualities (position-dependent for the illumina profile).
+        q1 = make_quality(m, rl, quality_profile, quality_params, base_q, rng)
+        q2 = make_quality(m, rl, quality_profile, quality_params, base_q, rng)
+
+        # Introduce sequencing errors. For the illumina profile the per-base
+        # error probability is derived from the drawn quality (low-quality 3'
+        # bases are more error-prone); otherwise a flat --error-rate is used.
+        if quality_profile == "illumina":
+            for arr, q in ((r1, q1), (r2, q2)):
+                mask = rng.random(arr.shape) < 10.0 ** (-q / 10.0)
+                if mask.any():
+                    shift = rng.integers(1, 4, size=int(mask.sum()))
+                    arr[mask] = (arr[mask] + shift) % 4
+        elif error_rate > 0:
             for arr, q in ((r1, q1), (r2, q2)):
                 mask = rng.random(arr.shape) < error_rate
                 if mask.any():
@@ -381,6 +504,14 @@ def simulate_reads(genome, n_pairs, read_len, frag_mean, frag_sd, error_rate,
                     shift = rng.integers(1, 4, size=int(mask.sum()))
                     arr[mask] = (arr[mask] + shift) % 4
                     q[mask] = np.maximum(2, base_q // 2)
+
+        # Accumulate per-position quality counts for the FastQC-style boxplot.
+        if qual_hist is not None:
+            w = qual_hist.shape[1]
+            cols = np.broadcast_to(np.arange(rl), (m, rl))
+            for q in (q1, q2):
+                idx = cols.ravel() * w + np.clip(q, 0, w - 1).ravel()
+                qual_hist += np.bincount(idx, minlength=rl * w).reshape(rl, w)
 
         # Encode to ASCII bytes.
         r1_seq = BASES[r1]                             # m x rl uint8
@@ -448,12 +579,16 @@ def _write_fastq_chunk(out, name_prefix, base_idx, seq_bytes, qual_bytes, mate,
 # --------------------------------------------------------------------------- #
 # QC plots
 # --------------------------------------------------------------------------- #
-def write_qc_plots(qc_dir, prefix, coverage, rlen_counts, ref_name):
-    """Write QC PNGs (read-length histogram, per-base coverage) into ``qc_dir``.
+def write_qc_plots(qc_dir, prefix, coverage, rlen_counts, ref_name,
+                   qual_hist=None):
+    """Write QC PNGs (read-length histogram, per-base coverage, and — when
+    ``qual_hist`` is supplied — a FastQC-style per-base quality boxplot) into
+    ``qc_dir``.
 
     ``coverage`` is a length-``glen`` int array of per-base depth summed over
-    all lineages; ``rlen_counts`` maps read length -> number of reads.
-    Returns the list of written file paths.
+    all lineages; ``rlen_counts`` maps read length -> number of reads;
+    ``qual_hist`` is an (read_len, QMAX+1) int64 array of per-position quality
+    counts. Returns the list of written file paths.
     """
     try:
         import matplotlib
@@ -504,6 +639,54 @@ def write_qc_plots(qc_dir, prefix, coverage, rlen_counts, ref_name):
     plt.close(fig)
     written.append(cov_path)
 
+    # 3) FastQC-style per-base sequence quality box-and-whisker plot.
+    if qual_hist is not None and qual_hist.sum() > 0:
+        qb_path = os.path.join(qc_dir, f"{prefix}.per_base_quality.png")
+        rlp, nq = qual_hist.shape
+        qvals = np.arange(nq)
+        stats = []
+        for pos in range(rlp):
+            col = qual_hist[pos]
+            total = int(col.sum())
+            if total == 0:
+                stats.append(dict(label="", med=0, q1=0, q3=0,
+                                  whislo=0, whishi=0, fliers=[]))
+                continue
+            cdf = np.cumsum(col)
+
+            def pct(p):
+                idx = int(np.searchsorted(cdf, p / 100.0 * total, side="left"))
+                return int(qvals[min(idx, nq - 1)])
+
+            stats.append(dict(label="", med=pct(50), q1=pct(25), q3=pct(75),
+                              whislo=pct(10), whishi=pct(90), fliers=[]))
+
+        fig, ax = plt.subplots(figsize=(min(24, max(10, rlp * 0.06)), 6))
+        # FastQC-style background quality bands (poor / OK / good).
+        ax.axhspan(0, 20, facecolor="#f2d5d5", zorder=0)   # red
+        ax.axhspan(20, 28, facecolor="#f2eccf", zorder=0)  # orange
+        ax.axhspan(28, nq, facecolor="#d5f2d5", zorder=0)  # green
+        ax.bxp(stats, showfliers=False, patch_artist=True, widths=0.7,
+               boxprops=dict(facecolor="#fff29a", edgecolor="black",
+                             linewidth=0.5, zorder=3),
+               medianprops=dict(color="#c53030", linewidth=1.0, zorder=4),
+               whiskerprops=dict(color="black", linewidth=0.5, zorder=3),
+               capprops=dict(color="black", linewidth=0.5, zorder=3))
+        step = max(1, rlp // 25)
+        ticks = list(range(1, rlp + 1, step))
+        ax.set_xticks(ticks)
+        ax.set_xticklabels([str(t) for t in ticks])
+        ax.set_xlim(0.5, rlp + 0.5)
+        ax.set_ylim(0, nq)
+        ax.set_xlabel("Position in read (bp)")
+        ax.set_ylabel("Phred quality score")
+        ax.set_title(f"Per-base sequence quality — {prefix}")
+        ax.grid(axis="y", alpha=0.3, zorder=1)
+        fig.tight_layout()
+        fig.savefig(qb_path, dpi=150)
+        plt.close(fig)
+        written.append(qb_path)
+
     return written
 
 
@@ -527,80 +710,141 @@ def build_parser():
         prog="sewage",
         description="SEWAGE (Simulated Emulation of Wastewater-Abundance\n"
                     "Genome Ensembles): simulate paired-end wastewater-like\n"
-                    "FASTQ for a mixture of viral lineages, using\n"
-                    "references/barcodes from a local Freyja-barcodes clone.",
+                    "FASTQ for a mixture of viral lineages, using bundled\n"
+                    "references/barcodes (refresh with --update).",
         formatter_class=SewageHelpFormatter,
     )
-    p.add_argument("-p", "--pathogen",
+    # --- Reference / pathogen selection ------------------------------------
+    g_ref = p.add_argument_group(
+        "reference / pathogen selection",
+        "Choose the pathogen and the Freyja-barcodes source to build from.")
+    g_ref.add_argument("-p", "--pathogen",
                    help="Pathogen name as it appears in the Freyja-barcodes "
                         "repo (e.g. DENV4, MPX, RSVa, MEASLESgenome).")
-    p.add_argument("--repo", default=DEFAULT_REPO,
-                   help="Path to the Freyja-barcodes repository.")
-    p.add_argument("--version", default="latest",
+    g_ref.add_argument("--repo", default=DEFAULT_REPO,
+                   help="Path to the bundled barcode data directory. Defaults "
+                        "to the data/ folder shipped with SEWAGE (populated by "
+                        "--update); override or set FREYJA_BARCODES to use a "
+                        "different location.")
+    g_ref.add_argument("--version", default="latest",
                    help="Barcode version subfolder to use (e.g. latest or a "
                         "date like 2025-05-01).")
-    p.add_argument("--list", action="store_true",
+    g_ref.add_argument("--list", action="store_true",
                    help="List available pathogens in the repo and exit.")
-    p.add_argument("--list-lineages", action="store_true",
+    g_ref.add_argument("--list-lineages", action="store_true",
                    help="List available lineages for --pathogen and exit.")
 
-    # Proportions input.
-    p.add_argument("-i", "--proportions",
+    # --- Data management ---------------------------------------------------
+    g_data = p.add_argument_group(
+        "data management",
+        "Manage the bundled Freyja-barcodes data (references + barcodes).")
+    g_data.add_argument("--update", action="store_true",
+                   help="Download the latest upstream barcode repo and rebuild "
+                        "the local bundled data (all pathogens, latest + dated "
+                        "versions), then exit. Only reference.fasta and "
+                        "barcode.csv files are kept; new pathogens are added.")
+    g_data.add_argument("--update-repo", default=UPSTREAM_REPO,
+                   help="GitHub 'owner/name' to pull barcode data from.")
+    g_data.add_argument("--update-branch", default=UPSTREAM_BRANCH,
+                   help="Branch of the barcode repo to pull for --update.")
+
+    # --- Lineage proportions -----------------------------------------------
+    g_prop = p.add_argument_group(
+        "lineage proportions",
+        "Supply a proportions table or auto-generate one.")
+    g_prop.add_argument("-i", "--proportions",
                    help="CSV/TSV file: column 1 = lineage, column 2 = "
                         "proportion. Lineages must exist in the barcode file.")
-    p.add_argument("--generate-proportions", action="store_true",
+    g_prop.add_argument("--generate-proportions", action="store_true",
                    help="Auto-generate the proportions table instead of "
                         "supplying one. Prompts if --num-lineages/--prop-mode "
                         "are not given.")
-    p.add_argument("--num-lineages", type=int,
+    g_prop.add_argument("--num-lineages", type=int,
                    help="(generate) Number of lineages to include.")
-    p.add_argument("--prop-mode", choices=["equal", "dominant", "random"],
+    g_prop.add_argument("--prop-mode", choices=["equal", "dominant", "random"],
                    help="(generate) Proportion scheme.")
-    p.add_argument("--dominant-fraction", type=float,
+    g_prop.add_argument("--dominant-fraction", type=float,
                    help="(generate, dominant mode) Fraction for the dominant "
                         "lineage (default: random in [0.5, 0.8]).")
-    p.add_argument("--proportions-out",
+    g_prop.add_argument("--proportions-out",
                    help="Where to save the (generated or used) proportions "
                         "table. Default: <output_prefix>.proportions.tsv")
 
-    # Coverage: exactly one of --depth / --num-pairs.
-    p.add_argument("--depth", type=float,
+    # --- Sequencing depth --------------------------------------------------
+    g_depth = p.add_argument_group(
+        "sequencing depth",
+        "Specify exactly one of --depth or --num-pairs.")
+    g_depth.add_argument("--depth", type=float,
                    help="Target fold coverage depth for the whole sample. Read "
                         "pairs are derived from genome length and read length.")
-    p.add_argument("--num-pairs", type=int,
+    g_depth.add_argument("--num-pairs", type=int,
                    help="Total number of read PAIRS for the whole sample.")
 
-    # Read geometry / errors.
-    p.add_argument("--read-length", type=int, default=250,
+    # --- Read geometry & errors --------------------------------------------
+    g_read = p.add_argument_group(
+        "read geometry & errors",
+        "Read/fragment dimensions and the sequencing error rate.")
+    g_read.add_argument("--read-length", type=int, default=250,
                    help="Length of each mate.")
-    p.add_argument("--fragment-mean", type=float, default=500.0,
+    g_read.add_argument("--fragment-mean", type=float, default=500.0,
                    help="Mean fragment (insert) size.")
-    p.add_argument("--fragment-sd", type=float, default=50.0,
+    g_read.add_argument("--fragment-sd", type=float, default=50.0,
                    help="Std. dev. of fragment size.")
-    p.add_argument("--error-rate", type=float, default=0.005,
-                   help="Per-base sequencing error rate (0 to disable).")
+    g_read.add_argument("--error-rate", type=float, default=0.005,
+                   help="Per-base sequencing error rate (0 to disable). Used by "
+                        "the 'flat' quality profile; ignored by 'illumina', "
+                        "which derives errors from the per-base quality.")
 
-    p.add_argument("-o", "--output-prefix", default="sim_sample",
+    # --- Base-quality model ------------------------------------------------
+    g_qual = p.add_argument_group(
+        "base-quality model",
+        "How per-base Phred quality scores are generated.")
+    g_qual.add_argument("--quality-profile", choices=["flat", "illumina"],
+                   default="flat",
+                   help="Base-quality model. 'flat' (default) emits a constant "
+                        "quality derived from --error-rate. 'illumina' emits "
+                        "position-dependent qualities whose mean declines and "
+                        "spread widens toward the 3' end of each read.")
+    g_qual.add_argument("--quality-start", type=float, default=38.0,
+                   help="(illumina) Mean Phred quality at the 5' end of reads.")
+    g_qual.add_argument("--quality-end", type=float, default=30.0,
+                   help="(illumina) Mean Phred quality at the 3' end of reads.")
+    g_qual.add_argument("--quality-sd-start", type=float, default=1.0,
+                   help="(illumina) Quality std. dev. at the 5' end (narrow).")
+    g_qual.add_argument("--quality-sd-end", type=float, default=8.0,
+                   help="(illumina) Quality std. dev. at the 3' end (wide).")
+
+    # --- Output ------------------------------------------------------------
+    g_out = p.add_argument_group(
+        "output",
+        "FASTQ output location, compression, and reproducibility.")
+    g_out.add_argument("-o", "--output-prefix", default="sim_sample",
                    help="Prefix for output FASTQ files "
                         "(<prefix>_R1.fastq.gz / <prefix>_R2.fastq.gz).")
-    p.add_argument("--gzip", dest="gzip", action="store_true", default=True,
+    g_out.add_argument("--gzip", dest="gzip", action="store_true", default=True,
                    help="Gzip the FASTQ output (default).")
-    p.add_argument("--no-gzip", dest="gzip", action="store_false",
+    g_out.add_argument("--no-gzip", dest="gzip", action="store_false",
                    help="Write plain (uncompressed) FASTQ.")
-    p.add_argument("--gzip-level", type=int, default=6,
+    g_out.add_argument("--gzip-level", type=int, default=6,
                    help="gzip compression level 1-9. Lower is much faster with "
                         "slightly larger files; 9 (Python's default) is the "
                         "slowest and a common bottleneck for big outputs.")
-    p.add_argument("--seed", type=int, default=None,
+    g_out.add_argument("--seed", type=int, default=None,
                    help="Random seed for reproducibility.")
-    p.add_argument("--qc-plots", action="store_true",
-                   help="Generate QC PNGs (read-length histogram + per-base "
-                        "depth-of-coverage line plot) into a folder. Requires "
+
+    # --- QC & diagnostics --------------------------------------------------
+    g_qc = p.add_argument_group(
+        "QC & diagnostics",
+        "Optional quality-control plots and timing output.")
+    g_qc.add_argument("--qc-plots", action="store_true",
+                   help="Generate QC PNGs (read-length histogram, per-base "
+                        "depth-of-coverage line plot, and a FastQC-style "
+                        "per-base quality boxplot) into a folder. Requires "
                         "matplotlib.")
-    p.add_argument("--qc-dir",
+    g_qc.add_argument("--qc-dir",
                    help="Folder for the QC plots when --qc-plots is set. "
                         "Default: <output_prefix>_qc")
-    p.add_argument("--timing", action="store_true",
+    g_qc.add_argument("--timing", action="store_true",
                    help="Print elapsed wall-time per phase (genome build, "
                         "read simulation) to expose bottlenecks.")
     return p
@@ -611,6 +855,13 @@ def main(argv=None):
     rng = np.random.default_rng(args.seed)
 
     # --- Informational modes ------------------------------------------------
+    if args.update:
+        n_p, n_v, n_f = update_barcodes(args.repo, args.update_repo,
+                                        args.update_branch)
+        print(f"Updated bundled barcode data: {args.repo}")
+        print(f"  {n_p} pathogens, {n_v} pathogen/versions, {n_f} files")
+        return 0
+
     if args.list:
         print("\n".join(list_pathogens(args.repo)))
         return 0
@@ -704,12 +955,26 @@ def main(argv=None):
           f"-> {total_pairs} total read pairs")
     print(f"Read len : {args.read_length}  fragment: "
           f"{args.fragment_mean}±{args.fragment_sd}  err: {args.error_rate}")
+    if args.quality_profile == "illumina":
+        print(f"Quality  : illumina  mean {args.quality_start}->"
+              f"{args.quality_end}  sd {args.quality_sd_start}->"
+              f"{args.quality_sd_end}")
+    else:
+        print("Quality  : flat")
     print(f"Lineages : {len(pairs)}")
 
     # QC accumulators (only allocated when --qc-plots is requested). A length
-    # glen+1 difference array gives per-base coverage in O(reads) via cumsum.
+    # glen+1 difference array gives per-base coverage in O(reads) via cumsum;
+    # qual_hist holds per-position quality counts for the FastQC-style boxplot.
     cov_diff = np.zeros(glen + 1, dtype=np.int64) if args.qc_plots else None
     rlen_counts = {} if args.qc_plots else None
+    quality_params = (args.quality_start, args.quality_end,
+                      args.quality_sd_start, args.quality_sd_end)
+    if args.qc_plots:
+        rl_qc = min(args.read_length, glen)
+        qual_hist = np.zeros((rl_qc, QMAX + 1), dtype=np.int64)
+    else:
+        qual_hist = None
 
     total_written = 0
     t_sim = time.perf_counter()
@@ -721,7 +986,9 @@ def main(argv=None):
             w = simulate_reads(
                 genomes[name], n, args.read_length, args.fragment_mean,
                 args.fragment_sd, args.error_rate, rng, prefix, r1, r2,
-                cov_diff=cov_diff, rlen_counts=rlen_counts)
+                cov_diff=cov_diff, rlen_counts=rlen_counts,
+                quality_profile=args.quality_profile,
+                quality_params=quality_params, qual_hist=qual_hist)
             total_written += w
             lin_secs = time.perf_counter() - t_lin
             if args.timing:
@@ -749,7 +1016,7 @@ def main(argv=None):
         coverage = np.cumsum(cov_diff)[:glen]  # diff array -> per-base depth
         qc_prefix = os.path.basename(args.output_prefix)
         qc_files = write_qc_plots(qc_dir, qc_prefix, coverage, rlen_counts,
-                                  ref_name)
+                                  ref_name, qual_hist=qual_hist)
         print(f"  QC plots ({qc_dir}):")
         for f in qc_files:
             print(f"    {f}")
