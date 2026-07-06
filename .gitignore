@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Barcode data (clone separately from andersen-lab/Freyja-barcodes)
+Freyja-barcodes/
+
+# Simulated output
+*.fastq
+*.fastq.gz
+*.proportions.tsv
+sim_sample*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
