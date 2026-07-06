@@ -317,11 +317,16 @@ def phred_char_array(qs):
 
 
 def simulate_reads(genome, n_pairs, read_len, frag_mean, frag_sd, error_rate,
-                   rng, name_prefix, r1_out, r2_out, chunk=100000):
+                   rng, name_prefix, r1_out, r2_out, chunk=100000,
+                   cov_diff=None, rlen_counts=None):
     """Simulate ``n_pairs`` paired-end reads from one genome, writing FASTQ.
 
     Reads tile the whole genome uniformly. R1 is the forward strand at the
     fragment 5' end; R2 is the reverse-complement at the fragment 3' end.
+
+    If ``cov_diff`` (a length ``glen+1`` int64 difference array) and/or
+    ``rlen_counts`` (a dict of read-length -> count) are supplied, per-base
+    coverage and read-length statistics are accumulated for QC plotting.
     """
     glen = len(genome)
     if glen == 0 or n_pairs <= 0:
@@ -349,6 +354,16 @@ def simulate_reads(genome, n_pairs, read_len, frag_mean, frag_sd, error_rate,
         r1_idx = start[:, None] + offsets              # m x rl
         r2_region_start = start + frag - rl
         r2_idx = r2_region_start[:, None] + offsets    # m x rl (forward region)
+
+        # Accumulate QC stats before mutating arrays (cheap, O(reads) via a
+        # coverage difference array rather than O(reads*read_len)).
+        if cov_diff is not None:
+            np.add.at(cov_diff, start, 1)
+            np.add.at(cov_diff, start + rl, -1)
+            np.add.at(cov_diff, r2_region_start, 1)
+            np.add.at(cov_diff, r2_region_start + rl, -1)
+        if rlen_counts is not None:
+            rlen_counts[rl] = rlen_counts.get(rl, 0) + 2 * m  # both mates
 
         r1 = genome[r1_idx]                            # int-encoded bases
         r2_fwd = genome[r2_idx]
@@ -428,6 +443,68 @@ def _write_fastq_chunk(out, name_prefix, base_idx, seq_bytes, qual_bytes, mate,
     out_arr[:, p:p + le] = end_a
 
     out.write(out_arr.tobytes())
+
+
+# --------------------------------------------------------------------------- #
+# QC plots
+# --------------------------------------------------------------------------- #
+def write_qc_plots(qc_dir, prefix, coverage, rlen_counts, ref_name):
+    """Write QC PNGs (read-length histogram, per-base coverage) into ``qc_dir``.
+
+    ``coverage`` is a length-``glen`` int array of per-base depth summed over
+    all lineages; ``rlen_counts`` maps read length -> number of reads.
+    Returns the list of written file paths.
+    """
+    try:
+        import matplotlib
+        matplotlib.use("Agg")  # headless / no display required
+        import matplotlib.pyplot as plt
+    except Exception as exc:  # pragma: no cover - only hit without matplotlib
+        sys.exit("ERROR: --qc-plots requires matplotlib. Install it with "
+                 f"'pip install matplotlib'.\n       ({exc})")
+
+    os.makedirs(qc_dir, exist_ok=True)
+    written = []
+
+    # 1) Read-length distribution histogram.
+    lengths = np.array(sorted(rlen_counts), dtype=np.int64)
+    counts = np.array([rlen_counts[length] for length in lengths], dtype=np.int64)
+    rl_path = os.path.join(qc_dir, f"{prefix}.read_length_hist.png")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.bar(lengths, counts, width=max(1, 0.8), color="#2b6cb0", edgecolor="black")
+    ax.set_xlabel("Read length (bp)")
+    ax.set_ylabel("Number of reads")
+    ax.set_title(f"Read length distribution — {prefix}")
+    if lengths.size:
+        pad = max(1, int(0.5 * (lengths.max() - lengths.min() + 1)))
+        ax.set_xlim(lengths.min() - pad, lengths.max() + pad)
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(rl_path, dpi=150)
+    plt.close(fig)
+    written.append(rl_path)
+
+    # 2) Per-base depth of coverage across the genome (line only, no markers).
+    cov_path = os.path.join(qc_dir, f"{prefix}.coverage.png")
+    positions = np.arange(1, coverage.size + 1)
+    mean_cov = float(coverage.mean()) if coverage.size else 0.0
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.plot(positions, coverage, linewidth=0.8, color="#2f855a")
+    ax.axhline(mean_cov, color="#c53030", linewidth=1.0, linestyle="--",
+               label=f"mean = {mean_cov:.1f}x")
+    ax.set_xlabel("Genome position (bp)")
+    ax.set_ylabel("Depth of coverage")
+    ax.set_title(f"Depth of coverage across {ref_name} — {prefix}")
+    ax.set_xlim(1, coverage.size)
+    ax.set_ylim(bottom=0)
+    ax.legend(loc="upper right")
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(cov_path, dpi=150)
+    plt.close(fig)
+    written.append(cov_path)
+
+    return written
 
 
 # --------------------------------------------------------------------------- #
@@ -516,6 +593,13 @@ def build_parser():
                         "slowest and a common bottleneck for big outputs.")
     p.add_argument("--seed", type=int, default=None,
                    help="Random seed for reproducibility.")
+    p.add_argument("--qc-plots", action="store_true",
+                   help="Generate QC PNGs (read-length histogram + per-base "
+                        "depth-of-coverage line plot) into a folder. Requires "
+                        "matplotlib.")
+    p.add_argument("--qc-dir",
+                   help="Folder for the QC plots when --qc-plots is set. "
+                        "Default: <output_prefix>_qc")
     p.add_argument("--timing", action="store_true",
                    help="Print elapsed wall-time per phase (genome build, "
                         "read simulation) to expose bottlenecks.")
@@ -622,6 +706,11 @@ def main(argv=None):
           f"{args.fragment_mean}±{args.fragment_sd}  err: {args.error_rate}")
     print(f"Lineages : {len(pairs)}")
 
+    # QC accumulators (only allocated when --qc-plots is requested). A length
+    # glen+1 difference array gives per-base coverage in O(reads) via cumsum.
+    cov_diff = np.zeros(glen + 1, dtype=np.int64) if args.qc_plots else None
+    rlen_counts = {} if args.qc_plots else None
+
     total_written = 0
     t_sim = time.perf_counter()
     with opener(r1_path, "wb") as r1, opener(r2_path, "wb") as r2:
@@ -631,7 +720,8 @@ def main(argv=None):
             t_lin = time.perf_counter()
             w = simulate_reads(
                 genomes[name], n, args.read_length, args.fragment_mean,
-                args.fragment_sd, args.error_rate, rng, prefix, r1, r2)
+                args.fragment_sd, args.error_rate, rng, prefix, r1, r2,
+                cov_diff=cov_diff, rlen_counts=rlen_counts)
             total_written += w
             lin_secs = time.perf_counter() - t_lin
             if args.timing:
@@ -652,6 +742,18 @@ def main(argv=None):
     print(f"  R1: {r1_path}")
     print(f"  R2: {r2_path}")
     print(f"  proportions/manifest: {prop_out}")
+
+    # --- QC plots -----------------------------------------------------------
+    if args.qc_plots:
+        qc_dir = args.qc_dir or f"{args.output_prefix}_qc"
+        coverage = np.cumsum(cov_diff)[:glen]  # diff array -> per-base depth
+        qc_prefix = os.path.basename(args.output_prefix)
+        qc_files = write_qc_plots(qc_dir, qc_prefix, coverage, rlen_counts,
+                                  ref_name)
+        print(f"  QC plots ({qc_dir}):")
+        for f in qc_files:
+            print(f"    {f}")
+
     if args.timing:
         total_secs = build_secs + sim_secs
         rate = total_written / sim_secs if sim_secs > 0 else 0.0

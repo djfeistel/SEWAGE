@@ -33,6 +33,8 @@ a **known ground-truth mixture** of lineages.
 - Configurable read length, fragment size distribution, and per-base error rate.
 - Fast, `numpy`-vectorized read generation; gzip output by default.
 - Writes a manifest of the exact realized proportions and read-pair counts.
+- Optional QC plots (`--qc-plots`): read-length histogram and a per-base
+  depth-of-coverage line plot, written as PNGs into a folder.
 
 ---
 
@@ -112,6 +114,13 @@ For `-o sample` (gzip on by default):
 | `sample_R2.fastq.gz` | Reverse reads (reverse-complemented mates) |
 | `sample.proportions.tsv` | Manifest: requested proportion + realized read-pair count per lineage |
 
+With `--qc-plots`, a QC folder (default `sample_qc/`) is also written:
+
+| File | Description |
+|------|-------------|
+| `sample_qc/sample.read_length_hist.png` | Histogram of read lengths produced |
+| `sample_qc/sample.coverage.png` | Per-base depth of coverage across the genome (line plot) |
+
 Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 
 ```
@@ -143,7 +152,11 @@ Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 | `--error-rate` | Per-base sequencing error rate (`0` disables). | `0.005` |
 | `-o`, `--output-prefix` | Prefix for output FASTQ files. | `sim_sample` |
 | `--gzip` / `--no-gzip` | Gzip the FASTQ output (on by default). | gzip |
+| `--gzip-level` | gzip compression level 1–9 (lower = faster). | `6` |
 | `--seed` | Random seed for reproducibility. | — |
+| `--qc-plots` | Generate QC PNGs (read-length histogram + depth-of-coverage line plot) into a folder. Requires matplotlib. | off |
+| `--qc-dir` | Folder for the QC plots when `--qc-plots` is set. | `<prefix>_qc` |
+| `--timing` | Print per-phase wall-time to expose bottlenecks. | off |
 
 > **Note:** `--depth` and `--num-pairs` are mutually exclusive — provide exactly one.
 
@@ -206,7 +219,8 @@ usage: sewage [-h] [-p PATHOGEN] [--repo REPO] [--version VERSION] [--list]
               [--num-pairs NUM_PAIRS] [--read-length READ_LENGTH]
               [--fragment-mean FRAGMENT_MEAN] [--fragment-sd FRAGMENT_SD]
               [--error-rate ERROR_RATE] [-o OUTPUT_PREFIX] [--gzip]
-              [--no-gzip] [--gzip-level GZIP_LEVEL] [--seed SEED] [--timing]
+              [--no-gzip] [--gzip-level GZIP_LEVEL] [--seed SEED] [--qc-plots]
+              [--qc-dir QC_DIR] [--timing]
 
 SEWAGE (Simulated Emulation of Wastewater-Abundance
 Genome Ensembles): simulate paired-end wastewater-like
@@ -275,6 +289,11 @@ options:
                         slowest and a common bottleneck for big outputs.
                         (default: 6)
   --seed SEED           Random seed for reproducibility. (default: None)
+  --qc-plots            Generate QC PNGs (read-length histogram + per-base
+                        depth-of-coverage line plot) into a folder. Requires
+                        matplotlib. (default: False)
+  --qc-dir QC_DIR       Folder for the QC plots when --qc-plots is set.
+                        Default: <output_prefix>_qc (default: None)
   --timing              Print elapsed wall-time per phase (genome build, read
                         simulation) to expose bottlenecks. (default: False)
 ```
