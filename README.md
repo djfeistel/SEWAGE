@@ -35,7 +35,14 @@ a **known ground-truth mixture** of lineages.
 - Configurable read length, fragment size distribution, and per-base error rate.
 - Optional **realistic base-quality model** (`--quality-profile illumina`):
   per-base Phred scores whose mean declines and variance widens toward the 3'
-  end (the default `flat` profile keeps constant quality).
+  end (the default `flat` profile keeps constant quality). The quality model
+  only sets the reported Phred scores — it never alters the read bases.
+- **Base mutations are strictly opt-in.** By default reads are identical to
+  their source lineage genome. Two independent switches introduce changes:
+  `--error-rate` (a flat per-base error rate) and `--quality-errors` (mutate
+  each base with probability `10^(-Q/10)` from its own Phred score, so a Q15
+  base has ~3% chance of changing). Leave both off to keep perfect reads even
+  while quality scores worsen along the read.
 - Fast, `numpy`-vectorized read generation; gzip output by default.
 - Writes a manifest of the exact realized proportions and read-pair counts.
 - Optional QC plots (`--qc-plots`): read-length histogram, per-base
@@ -166,8 +173,9 @@ Read names follow an Illumina-like scheme encoding the source lineage, e.g.:
 | `--read-length` | Length of each mate. | `250` |
 | `--fragment-mean` | Mean fragment (insert) size. | `500` |
 | `--fragment-sd` | Std. dev. of fragment size. | `50` |
-| `--error-rate` | Per-base sequencing error rate (`0` disables; `flat` profile only). | `0.005` |
-| `--quality-profile` | Base-quality model: `flat` (constant) or `illumina` (declines/widens toward 3'). | `flat` |
+| `--error-rate` | Flat per-base error rate that mutates read bases (`0` disables). Independent of the quality profile. | `0.005` |
+| `--quality-errors` | Also mutate bases using each base's own Phred score as its error probability (`P = 10^(-Q/10)`). Off by default. | off |
+| `--quality-profile` | Base-quality model (Phred scores only, never the bases): `flat` (constant) or `illumina` (declines/widens toward 3'). | `flat` |
 | `--quality-start` / `--quality-end` | (illumina) Mean Phred quality at the 5' / 3' end. | `38` / `30` |
 | `--quality-sd-start` / `--quality-sd-end` | (illumina) Quality std. dev. at the 5' / 3' end. | `1` / `8` |
 | `-o`, `--output-prefix` | Prefix for outputs; all files go into `<prefix>_sewage/`. | `sim_sample` |
@@ -239,7 +247,8 @@ usage: sewage [-h] [-p PATHOGEN] [--repo REPO] [--version VERSION] [--list]
               [--proportions-out PROPORTIONS_OUT] [--depth DEPTH]
               [--num-pairs NUM_PAIRS] [--read-length READ_LENGTH]
               [--fragment-mean FRAGMENT_MEAN] [--fragment-sd FRAGMENT_SD]
-              [--error-rate ERROR_RATE] [--quality-profile {flat,illumina}]
+              [--error-rate ERROR_RATE] [--quality-errors]
+              [--quality-profile {flat,illumina}]
               [--quality-start QUALITY_START] [--quality-end QUALITY_END]
               [--quality-sd-start QUALITY_SD_START]
               [--quality-sd-end QUALITY_SD_END] [-o OUTPUT_PREFIX] [--gzip]
@@ -332,19 +341,25 @@ read geometry & errors:
   --fragment-sd FRAGMENT_SD
                         Std. dev. of fragment size. (default: 50.0)
   --error-rate ERROR_RATE
-                        Per-base sequencing error rate (0 to disable). Used by
-                        the 'flat' quality profile; ignored by 'illumina',
-                        which derives errors from the per-base quality.
-                        (default: 0.005)
+                        Flat per-base sequencing error rate that mutates read
+                        bases (0 to disable). Independent of the quality
+                        profile, which only sets Phred scores. (default:
+                        0.005)
+  --quality-errors      Also mutate bases using each base's own Phred score as
+                        its error probability (P = 10**(-Q/10)); e.g. a Q15
+                        base has ~3% chance of being changed. Off by default,
+                        so quality scores can worsen while the reads stay
+                        identical to the source genome. (default: False)
 
 base-quality model:
   How per-base Phred quality scores are generated.
 
   --quality-profile {flat,illumina}
-                        Base-quality model. 'flat' (default) emits a constant
-                        quality derived from --error-rate. 'illumina' emits
-                        position-dependent qualities whose mean declines and
-                        spread widens toward the 3' end of each read.
+                        Base-quality model (affects reported Phred scores
+                        only, never the bases). 'flat' (default) emits a
+                        constant quality derived from --error-rate. 'illumina'
+                        emits position-dependent qualities whose mean declines
+                        and spread widens toward the 3' end of each read.
                         (default: flat)
   --quality-start QUALITY_START
                         (illumina) Mean Phred quality at the 5' end of reads.

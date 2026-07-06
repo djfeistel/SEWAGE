@@ -233,7 +233,12 @@ def load_barcode(path):
     """
     with open(path, newline="") as fh:
         reader = csv.reader(fh)
-        header = next(reader)
+        try:
+            header = next(reader)
+        except StopIteration:
+            sys.exit(f"ERROR: barcode file is empty (no header row): {path}\n"
+                     "       This pathogen has no lineage barcodes available "
+                     "upstream. Skip it or choose another --pathogen.")
         mutations = header[1:]
         lineage_muts = {}
         for row in reader:
@@ -429,17 +434,22 @@ def make_quality(m, rl, profile, qparams, base_q, rng):
 def simulate_reads(genome, n_pairs, read_len, frag_mean, frag_sd, error_rate,
                    rng, name_prefix, r1_out, r2_out, chunk=100000,
                    cov_diff=None, rlen_counts=None, quality_profile="flat",
-                   quality_params=None, qual_hist=None):
+                   quality_params=None, qual_hist=None, quality_errors=False):
     """Simulate ``n_pairs`` paired-end reads from one genome, writing FASTQ.
 
     Reads tile the whole genome uniformly. R1 is the forward strand at the
     fragment 5' end; R2 is the reverse-complement at the fragment 3' end.
 
     ``quality_profile`` selects the base-quality model ("flat" or "illumina",
-    see :func:`make_quality`). If ``cov_diff`` (length ``glen+1`` int64 diff
-    array), ``rlen_counts`` (read-length -> count dict), and/or ``qual_hist``
-    (an (rl, QMAX+1) int64 array of per-position quality counts) are supplied,
-    the corresponding QC statistics are accumulated for plotting.
+    see :func:`make_quality`) and only sets the reported Phred scores. Read
+    bases are left identical to the source genome unless a mutation switch is
+    enabled: ``error_rate`` > 0 applies a flat per-base error rate, and
+    ``quality_errors`` mutates each base with probability ``10**(-Q/10)``
+    derived from that base's own Phred score. If ``cov_diff`` (length
+    ``glen+1`` int64 diff array), ``rlen_counts`` (read-length -> count dict),
+    and/or ``qual_hist`` (an (rl, QMAX+1) int64 array of per-position quality
+    counts) are supplied, the corresponding QC statistics are accumulated for
+    plotting.
     """
     glen = len(genome)
     if glen == 0 or n_pairs <= 0:
@@ -483,27 +493,29 @@ def simulate_reads(genome, n_pairs, read_len, frag_mean, frag_sd, error_rate,
         # Reverse-complement the R2 region: reverse along read, complement 3-b.
         r2 = 3 - r2_fwd[:, ::-1]
 
-        # Per-base qualities (position-dependent for the illumina profile).
+        # Per-base qualities. The quality profile ONLY sets the reported Phred
+        # scores; it never alters the read bases. A low quality simply reflects
+        # what the sequencer "thinks" of a base, not that the base was changed.
         q1 = make_quality(m, rl, quality_profile, quality_params, base_q, rng)
         q2 = make_quality(m, rl, quality_profile, quality_params, base_q, rng)
 
-        # Introduce sequencing errors. For the illumina profile the per-base
-        # error probability is derived from the drawn quality (low-quality 3'
-        # bases are more error-prone); otherwise a flat --error-rate is used.
-        if quality_profile == "illumina":
+        # Introduce sequencing errors. By default the read bases are left
+        # identical to the source genome. Two independent, opt-in switches can
+        # mutate them: quality-driven errors (each base mutates with prob.
+        # 10**(-Q/10) from its own Phred score) and a flat --error-rate.
+        if quality_errors:
             for arr, q in ((r1, q1), (r2, q2)):
                 mask = rng.random(arr.shape) < 10.0 ** (-q / 10.0)
                 if mask.any():
                     shift = rng.integers(1, 4, size=int(mask.sum()))
                     arr[mask] = (arr[mask] + shift) % 4
-        elif error_rate > 0:
-            for arr, q in ((r1, q1), (r2, q2)):
+        if error_rate > 0:
+            for arr in (r1, r2):
                 mask = rng.random(arr.shape) < error_rate
                 if mask.any():
                     # Replace with a different random base (shift by 1..3 mod 4).
                     shift = rng.integers(1, 4, size=int(mask.sum()))
                     arr[mask] = (arr[mask] + shift) % 4
-                    q[mask] = np.maximum(2, base_q // 2)
 
         # Accumulate per-position quality counts for the FastQC-style boxplot.
         if qual_hist is not None:
@@ -809,9 +821,15 @@ def build_parser():
     g_read.add_argument("--fragment-sd", type=float, default=50.0,
                    help="Std. dev. of fragment size.")
     g_read.add_argument("--error-rate", type=float, default=0.005,
-                   help="Per-base sequencing error rate (0 to disable). Used by "
-                        "the 'flat' quality profile; ignored by 'illumina', "
-                        "which derives errors from the per-base quality.")
+                   help="Flat per-base sequencing error rate that mutates read "
+                        "bases (0 to disable). Independent of the quality "
+                        "profile, which only sets Phred scores.")
+    g_read.add_argument("--quality-errors", action="store_true",
+                   help="Also mutate bases using each base's own Phred score as "
+                        "its error probability (P = 10**(-Q/10)); e.g. a Q15 "
+                        "base has ~3%% chance of being changed. Off by default, "
+                        "so quality scores can worsen while the reads stay "
+                        "identical to the source genome.")
 
     # --- Base-quality model ------------------------------------------------
     g_qual = p.add_argument_group(
@@ -819,7 +837,8 @@ def build_parser():
         "How per-base Phred quality scores are generated.")
     g_qual.add_argument("--quality-profile", choices=["flat", "illumina"],
                    default="flat",
-                   help="Base-quality model. 'flat' (default) emits a constant "
+                   help="Base-quality model (affects reported Phred scores only, "
+                        "never the bases). 'flat' (default) emits a constant "
                         "quality derived from --error-rate. 'illumina' emits "
                         "position-dependent qualities whose mean declines and "
                         "spread widens toward the 3' end of each read.")
@@ -1013,7 +1032,8 @@ def main(argv=None):
                 args.fragment_sd, args.error_rate, rng, prefix, r1, r2,
                 cov_diff=cov_diff, rlen_counts=rlen_counts,
                 quality_profile=args.quality_profile,
-                quality_params=quality_params, qual_hist=qual_hist)
+                quality_params=quality_params, qual_hist=qual_hist,
+                quality_errors=args.quality_errors)
             total_written += w
             lin_secs = time.perf_counter() - t_lin
             if args.timing:
